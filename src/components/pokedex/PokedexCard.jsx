@@ -26,7 +26,7 @@ function DiscoveredCard({ entry }) {
     <Link to={`/pokedex/${entry.id}`} className={`pokedex-card ${entry.status}`}>
       <div className="pokedex-card-sprite">
         {status === 'ready' && sprite ? (
-          <img src={sprite} alt={entry.name} loading="lazy" />
+          <img className="sprite-idle" src={sprite} alt={entry.name} loading="lazy" />
         ) : (
           <span className="placeholder">{status === 'error' ? '!' : '...'}</span>
         )}

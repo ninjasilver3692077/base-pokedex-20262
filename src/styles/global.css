@@ -39,6 +39,7 @@ img {
 .screen {
   max-width: 640px;
   margin: 0 auto;
+  animation: screen-fade-in 0.25s ease-out;
 }
 
 .btn {
@@ -69,8 +70,13 @@ img {
   color: #eaeaea;
 }
 
+.zone-card {
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
 .zone-card:hover {
   border-color: #e94560;
+  transform: translateY(-2px);
 }
 
 .zone-card h2 {
@@ -103,6 +109,7 @@ img {
   background: #0f3460;
   border: 2px solid #4ade80;
   border-radius: 6px;
+  animation: pokedex-updated-enter 0.3s ease-out;
 }
 
 .pokedex-updated-banner strong {
@@ -133,11 +140,43 @@ img {
 
 .battle-enemy,
 .battle-player {
+  position: relative;
   background: #16213e;
   border: 2px solid #0f3460;
   border-radius: 6px;
   padding: 1rem;
   text-align: center;
+}
+
+.pokeball-icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(
+    to bottom,
+    #e94560 0%,
+    #e94560 48%,
+    #1a1a2e 48%,
+    #1a1a2e 52%,
+    #eaeaea 52%,
+    #eaeaea 100%
+  );
+  border: 2px solid #1a1a2e;
+}
+
+.pokeball-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #eaeaea;
+  border: 2px solid #1a1a2e;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .battle-enemy h2,
@@ -207,6 +246,7 @@ img {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
+  animation: outcome-enter 0.35s ease-out;
 }
 
 .battle-outcome .btn {

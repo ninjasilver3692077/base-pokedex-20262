@@ -123,9 +123,9 @@ function Exploration() {
           <p>¡Un Pokémon salvaje apareció!</p>
           {encounter.status === 'ready' && encounter.pokemon ? (
             <>
-              <div className="pokemon-details-sprite">
+              <div key={explore.encounterId} className="pokemon-details-sprite sprite-appear">
                 {encounter.pokemon.sprites?.front_default ? (
-                  <img src={encounter.pokemon.sprites.front_default} alt={encounter.pokemon.name} />
+                  <img className="sprite-idle" src={encounter.pokemon.sprites.front_default} alt={encounter.pokemon.name} />
                 ) : (
                   <span className="placeholder">?</span>
                 )}

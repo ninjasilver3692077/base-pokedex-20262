@@ -62,8 +62,8 @@ function PokemonDetails() {
         {isCaptured && <span className="captured-badge">✓ Capturado</span>}
       </h1>
 
-      <div className="pokemon-details-sprite">
-        {artwork ? <img src={artwork} alt={pokemon.name} /> : <span className="placeholder">?</span>}
+      <div className="pokemon-details-sprite sprite-appear">
+        {artwork ? <img className="sprite-idle" src={artwork} alt={pokemon.name} /> : <span className="placeholder">?</span>}
       </div>
 
       <div className="type-badges">

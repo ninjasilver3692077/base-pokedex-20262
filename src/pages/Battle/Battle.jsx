@@ -6,6 +6,7 @@ import { useSpecies } from '../../hooks/useSpecies.js'
 import { createBattleState, resolveTurn } from '../../game/battle.js'
 import { GAME_ACTIONS } from '../../context/gameReducer.js'
 import { capitalize } from '../../utils/text.js'
+import PokeballIcon from '../../components/battle/PokeballIcon.jsx'
 
 const OUTCOME_MESSAGES = {
   enemyFainted: 'El Pokémon salvaje se debilitó por completo y ya no se puede capturar.',
@@ -31,6 +32,11 @@ function Battle() {
   const { status: speciesStatus, species } = useSpecies(enemyId)
 
   const [battle, setBattle] = useState(null)
+  // effects.tick fuerza el remount de los elementos animados de cada turno
+  // (para que las animaciones CSS de un solo golpe se repitan cada vez, sin
+  // afectar a la barra de HP, que necesita permanecer montada para que su
+  // transition anime la reducción en vez de saltar de golpe).
+  const [effects, setEffects] = useState({ tick: 0, enemyClass: '', playerClass: '' })
 
   useEffect(() => {
     if (status === 'ready' && enemyPokemon) {
@@ -50,7 +56,19 @@ function Battle() {
   function handleAction(action) {
     if (!battle || battle.outcome) return
     if (action === 'pokeball' && speciesStatus !== 'ready') return
-    setBattle((prev) => resolveTurn(prev, action, enemyPokemon, species?.capture_rate))
+
+    const next = resolveTurn(battle, action, enemyPokemon, species?.capture_rate)
+
+    let enemyClass = ''
+    if (next.outcome === 'captured') enemyClass = 'capture-success'
+    else if (action === 'pokeball') enemyClass = 'capture-fail-bounce'
+    else if (action === 'attack') enemyClass = 'attack-flash'
+    else if (action === 'special') enemyClass = 'special-flash'
+
+    const playerClass = next.playerHp < battle.playerHp ? 'player-hit-flash' : ''
+
+    setEffects((prev) => ({ tick: prev.tick + 1, enemyClass, playerClass }))
+    setBattle(next)
   }
 
   if (enemyId == null) {
@@ -91,11 +109,19 @@ function Battle() {
         <div className="battle-enemy">
           <h2>{capitalize(enemyPokemon.name)}</h2>
           <HpBar current={battle.enemyHp} max={battle.enemyMaxHp} />
-          {sprite ? <img src={sprite} alt={enemyPokemon.name} /> : <span className="placeholder">?</span>}
+          <div key={effects.tick} className={effects.tick === 0 ? 'sprite-appear' : effects.enemyClass}>
+            {sprite ? <img className="sprite-idle" src={sprite} alt={enemyPokemon.name} /> : <span className="placeholder">?</span>}
+          </div>
+          {(effects.enemyClass === 'capture-fail-bounce' || effects.enemyClass === 'capture-success') && (
+            <PokeballIcon
+              key={`ball-${effects.tick}`}
+              result={effects.enemyClass === 'capture-success' ? 'success' : 'fail'}
+            />
+          )}
         </div>
 
         <div className="battle-player">
-          <h2>Tú</h2>
+          <h2 key={effects.tick} className={effects.playerClass}>Tú</h2>
           <HpBar current={battle.playerHp} max={battle.playerMaxHp} />
         </div>
       </div>
