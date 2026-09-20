@@ -3,3 +3,6 @@ dist
 .DS_Store
 *.local
 .playwright-mcp
+# Referencias visuales con copyright de terceros (sprites oficiales,
+# capturas de mapas): solo para dirección artística local, nunca al repo.
+references/

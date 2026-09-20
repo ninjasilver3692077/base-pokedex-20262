@@ -10,6 +10,7 @@ const D = 'dirt'
 const W = 'water'
 const TG = 'tall-grass'
 const FL = 'flower'
+const S = 'sand'
 
 export const CENTRAL_TOWN_MAP = {
   id: 'central-town',
@@ -23,10 +24,10 @@ export const CENTRAL_TOWN_MAP = {
     [T, G, G, G, B, B, B, G, FL, G, G, G, G, T],
     [T, G, FL, G, F, F, F, G, G, G, G, G, G, T],
     [T, G, G, D, D, D, D, D, D, D, G, G, G, T],
-    [T, G, G, D, G, G, G, G, G, D, G, TG, TG, T],
+    [T, S, S, D, G, G, G, G, G, D, G, TG, TG, T],
     [T, W, W, D, G, TG, TG, G, G, D, G, TG, TG, T],
     [T, W, W, D, G, TG, TG, G, G, D, G, G, G, T],
-    [T, G, G, D, D, D, D, D, D, D, G, G, G, T],
+    [T, S, S, D, D, D, D, D, D, D, G, G, G, T],
     [T, T, T, T, T, T, T, T, T, T, T, T, T, T],
   ],
 }
