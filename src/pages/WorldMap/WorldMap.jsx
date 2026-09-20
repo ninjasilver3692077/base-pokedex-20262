@@ -1,26 +1,18 @@
 import { Link } from 'react-router-dom'
-import { ZONES } from '../../game/zones.js'
-import { capitalize } from '../../utils/text.js'
+import GameViewport from '../../components/world/GameViewport.jsx'
+import { CENTRAL_TOWN_MAP } from '../../game/maps/central-town.js'
 
+// Fase 11C: primer montaje del viewport de tiles/cámara, foco estático en
+// el spawn. El movimiento real del jugador y el resto de zonas como
+// regiones jugables llegan en 11D/11E; el listado de zonas como tarjetas
+// se retira entonces. Por ahora esto solo valida render + clamping.
 function WorldMap() {
   return (
     <section className="screen pokedex-screen">
       <h1>Mapa del mundo</h1>
-      <p>Elige una zona para explorarla y buscar Pokémon salvajes.</p>
+      <p>Vista previa del viewport del mundo (Fase 11C) — movimiento en la próxima fase.</p>
 
-      <div className="zone-grid">
-        {ZONES.map((zone) => (
-          <Link key={zone.id} to={`/explore/${zone.id}`} className="zone-card">
-            <h2>{zone.name}</h2>
-            <p>{zone.description}</p>
-            <div className="type-badges">
-              {zone.types.map((type) => (
-                <span key={type} className={`type-badge type-${type}`}>{capitalize(type)}</span>
-              ))}
-            </div>
-          </Link>
-        ))}
-      </div>
+      <GameViewport map={CENTRAL_TOWN_MAP} focus={CENTRAL_TOWN_MAP.spawn} />
 
       <Link to="/pokedex" className="text-link">Ver Pokédex</Link>
     </section>

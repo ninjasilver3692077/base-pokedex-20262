@@ -1,0 +1,111 @@
+/* Viewport del juego y tiles (Fase 11C). Archivo separado de global.css
+   siguiendo el mismo criterio que animations.css/variables.css. */
+
+.game-viewport {
+  position: relative;
+  overflow: hidden;
+  margin: 1rem auto;
+  border: var(--panel-border-width) solid var(--color-border);
+  image-rendering: pixelated;
+}
+
+.game-world {
+  position: relative;
+  will-change: transform;
+}
+
+.tile-layer {
+  display: grid;
+}
+
+.tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+}
+
+.tile-grass {
+  background: var(--world-grass);
+}
+
+.tile-tall-grass {
+  background-color: var(--world-tall-grass);
+  background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 2px, transparent 2px 6px);
+}
+
+.tile-dirt {
+  background: var(--world-dirt);
+}
+
+.tile-sand {
+  background: var(--world-sand);
+}
+
+.tile-water {
+  background-color: var(--world-water);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+}
+
+.tile-rock {
+  background: var(--world-rock);
+}
+
+.tile-tree {
+  background-color: var(--world-grass);
+  background-image: radial-gradient(circle at 50% 40%, var(--world-tree) 0 45%, transparent 46%);
+}
+
+.tile-flower {
+  background-color: var(--world-grass);
+  background-image: radial-gradient(circle at 30% 30%, var(--world-flower) 0 15%, transparent 16%),
+    radial-gradient(circle at 70% 60%, var(--world-flower) 0 15%, transparent 16%);
+}
+
+.tile-cliff {
+  background: var(--world-cliff);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.tile-bridge {
+  background-color: var(--world-bridge);
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0 2px, transparent 2px 8px);
+}
+
+.tile-building {
+  background-color: var(--world-building-roof);
+  box-shadow: inset 0 -8px 0 var(--world-building-wall);
+}
+
+.tile-fence {
+  background-color: var(--world-grass);
+  background-image: repeating-linear-gradient(90deg, var(--world-fence) 0 4px, transparent 4px 12px);
+}
+
+.tile-snow {
+  background: var(--world-snow);
+}
+
+.tile-ice {
+  background: var(--world-ice);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.tile-lava {
+  background: var(--world-lava);
+}
+
+.tile-cave-entrance {
+  background: radial-gradient(circle, #14100f 0%, var(--world-cave-entrance) 70%);
+}
+
+.player-token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  background: var(--color-accent);
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  transition: transform 0.15s linear;
+  z-index: 5;
+}

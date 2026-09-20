@@ -6,6 +6,7 @@ import { GameProvider } from './context/GameContext.jsx'
 import './styles/variables.css'
 import './styles/global.css'
 import './styles/animations.css'
+import './styles/world.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -1,12 +1,37 @@
 :root {
-  --color-bg: #1a1a2e;
-  --color-panel: #16213e;
-  --color-border: #0f3460;
-  --color-accent: #e94560;
-  --color-success: #4ade80;
-  --color-warning: #facc15;
-  --color-text: #eaeaea;
-  --color-shadow: #0a0a18;
+  /* Fase 11B: paleta viva inspirada en los RPG Pokémon de la era GBA,
+     reemplaza el azul-marino dominante de la Fase 11 original. Mapeo
+     semántico preservado (mismo token, valor invertido claro/oscuro). */
+  --color-bg: #f4ecd2;
+  --color-panel: #fffaf0;
+  --color-border: #2b3a55;
+  --color-accent: #e3350d;
+  --color-accent-blue: #2a75bb;
+  --color-success: #3cb043;
+  --color-warning: #ffcb05;
+  --color-text: #26311f;
+  --color-shadow: #1c2740;
+
+  /* Nivel "mundo": lo consume src/game/tiles.js vía world.css (Fase 11C+).
+     Aporta la variedad de color viva del mapa; --color-bg solo se ve
+     detrás del HUD/menús que todavía no son el viewport del juego. */
+  --world-grass: #5fb04c;
+  --world-tall-grass: #3f8f3a;
+  --world-dirt: #c9a46a;
+  --world-sand: #e8d38a;
+  --world-water: #3aa0c9;
+  --world-rock: #8a8577;
+  --world-tree: #2f6b34;
+  --world-snow: #eef3f5;
+  --world-ice: #bfe6ef;
+  --world-lava: #d1481f;
+  --world-building-roof: #c0392b;
+  --world-building-wall: #f2e6c9;
+  --world-flower: #ff6f9f;
+  --world-fence: #a9714c;
+  --world-cliff: #6b6658;
+  --world-bridge: #d8a856;
+  --world-cave-entrance: #2a2622;
 
   /* Press Start 2P para HUD/títulos/botones (cortos); VT323 para texto
      largo (más legible a tamaños normales que un pixel-font de bloque). */

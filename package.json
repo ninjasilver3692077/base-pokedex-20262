@@ -11,7 +11,8 @@
     "verify:reducer": "node scripts/verify-game-reducer.mjs",
     "verify:encounters": "node scripts/verify-encounters.mjs",
     "verify:battle": "node scripts/verify-battle.mjs",
-    "verify:capture": "node scripts/verify-capture.mjs"
+    "verify:capture": "node scripts/verify-capture.mjs",
+    "verify:world": "node scripts/verify-world.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",
