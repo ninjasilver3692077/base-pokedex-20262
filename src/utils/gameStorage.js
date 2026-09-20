@@ -1,5 +1,5 @@
 export const STORAGE_KEY = 'pokemon-expedition:save'
-export const CURRENT_VERSION = 1
+export const CURRENT_VERSION = 2
 
 export function createInitialGameState() {
   return {
@@ -9,6 +9,14 @@ export function createInitialGameState() {
     capturedPokemonIds: [],
     selectedPokemonId: null,
     teamPokemonIds: [],
+    // Fase 11D: estado del mundo/jugador. Sin migración desde version 1
+    // (mismo criterio que ya tenía loadGameState: un save de una versión
+    // antigua cae al estado inicial en vez de romper la app).
+    mode: 'world', // 'world' | 'battle' | 'menu'
+    currentRegionId: null,
+    playerPosition: { x: 0, y: 0 },
+    playerDirection: 'down',
+    lastWorldPosition: null, // { regionId, x, y } — snapshot antes de entrar a batalla
   }
 }
 

@@ -12,7 +12,8 @@
     "verify:encounters": "node scripts/verify-encounters.mjs",
     "verify:battle": "node scripts/verify-battle.mjs",
     "verify:capture": "node scripts/verify-capture.mjs",
-    "verify:world": "node scripts/verify-world.mjs"
+    "verify:world": "node scripts/verify-world.mjs",
+    "verify:movement": "node scripts/verify-movement.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

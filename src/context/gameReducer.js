@@ -8,6 +8,11 @@ export const GAME_ACTIONS = {
   SELECT_POKEMON: 'SELECT_POKEMON',
   SET_STARTER: 'SET_STARTER',
   RESET_GAME: 'RESET_GAME',
+  ENTER_REGION: 'ENTER_REGION',
+  MOVE_PLAYER: 'MOVE_PLAYER',
+  SET_MODE: 'SET_MODE',
+  ENTER_BATTLE: 'ENTER_BATTLE',
+  EXIT_BATTLE: 'EXIT_BATTLE',
 }
 
 function addUnique(list, id) {
@@ -35,6 +40,34 @@ export function gameReducer(state, action) {
 
     case GAME_ACTIONS.RESET_GAME:
       return createInitialGameState()
+
+    case GAME_ACTIONS.ENTER_REGION:
+      return { ...state, currentRegionId: action.regionId, playerPosition: { x: action.x, y: action.y } }
+
+    case GAME_ACTIONS.MOVE_PLAYER:
+      return { ...state, playerPosition: { x: action.x, y: action.y }, playerDirection: action.direction }
+
+    case GAME_ACTIONS.SET_MODE:
+      return { ...state, mode: action.mode }
+
+    // Snapshotea dónde estaba el jugador en el mundo antes de entrar a
+    // batalla, para poder restaurarlo exactamente con EXIT_BATTLE.
+    case GAME_ACTIONS.ENTER_BATTLE:
+      return {
+        ...state,
+        mode: 'battle',
+        lastWorldPosition: { regionId: state.currentRegionId, ...state.playerPosition },
+      }
+
+    case GAME_ACTIONS.EXIT_BATTLE: {
+      const back = state.lastWorldPosition
+      return {
+        ...state,
+        mode: 'world',
+        currentRegionId: back?.regionId ?? state.currentRegionId,
+        playerPosition: back ? { x: back.x, y: back.y } : state.playerPosition,
+      }
+    }
 
     default:
       return state
