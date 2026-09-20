@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { usePokemon } from '../../hooks/usePokemon.js'
-import { loadGameState } from '../../utils/gameStorage.js'
+import { useGame } from '../../context/GameContext.jsx'
 import { capitalize } from '../../utils/text.js'
 
 function PokemonDetails() {
@@ -8,7 +8,8 @@ function PokemonDetails() {
   const id = Number(pokemonId)
   const isValidId = Number.isInteger(id) && id > 0
 
-  const { discoveredPokemonIds, capturedPokemonIds } = loadGameState()
+  const { state } = useGame()
+  const { discoveredPokemonIds, capturedPokemonIds } = state
   const isCaptured = capturedPokemonIds.includes(id)
   const isDiscovered = isCaptured || discoveredPokemonIds.includes(id)
 

@@ -1,7 +1,7 @@
 export const STORAGE_KEY = 'pokemon-expedition:save'
 export const CURRENT_VERSION = 1
 
-function createInitialState() {
+export function createInitialGameState() {
   return {
     version: CURRENT_VERSION,
     starterPokemonId: null,
@@ -12,15 +12,14 @@ function createInitialState() {
   }
 }
 
-// Solo lectura por ahora: la Fase 4 añade el escritor (GameContext + reducer)
-// sobre esta misma forma versionada. Cualquier dato ausente, corrupto o de una
-// versión antigua cae de vuelta al estado inicial en lugar de romper la app.
+// Cualquier dato ausente, corrupto o de una versión antigua cae de vuelta al
+// estado inicial en lugar de romper la app.
 export function loadGameState() {
-  if (typeof localStorage === 'undefined') return createInitialState()
+  if (typeof localStorage === 'undefined') return createInitialGameState()
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return createInitialState()
+    if (!raw) return createInitialGameState()
 
     const parsed = JSON.parse(raw)
     const isValid =
@@ -29,10 +28,21 @@ export function loadGameState() {
       Array.isArray(parsed.discoveredPokemonIds) &&
       Array.isArray(parsed.capturedPokemonIds)
 
-    if (!isValid) return createInitialState()
+    if (!isValid) return createInitialGameState()
 
-    return { ...createInitialState(), ...parsed }
+    return { ...createInitialGameState(), ...parsed }
   } catch {
-    return createInitialState()
+    return createInitialGameState()
+  }
+}
+
+export function saveGameState(state) {
+  if (typeof localStorage === 'undefined') return
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // localStorage puede fallar (modo privado, cuota excedida, etc.); el
+    // progreso simplemente no persiste en ese caso, sin romper la app.
   }
 }
