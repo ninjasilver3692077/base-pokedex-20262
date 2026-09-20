@@ -10,7 +10,8 @@
     "verify:api": "node scripts/verify-pokeapi.mjs",
     "verify:reducer": "node scripts/verify-game-reducer.mjs",
     "verify:encounters": "node scripts/verify-encounters.mjs",
-    "verify:battle": "node scripts/verify-battle.mjs"
+    "verify:battle": "node scripts/verify-battle.mjs",
+    "verify:capture": "node scripts/verify-capture.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

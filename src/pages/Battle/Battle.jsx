@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGame } from '../../context/GameContext.jsx'
 import { usePokemon } from '../../hooks/usePokemon.js'
+import { useSpecies } from '../../hooks/useSpecies.js'
 import { createBattleState, resolveTurn } from '../../game/battle.js'
+import { GAME_ACTIONS } from '../../context/gameReducer.js'
 import { capitalize } from '../../utils/text.js'
 
 const OUTCOME_MESSAGES = {
@@ -23,9 +25,10 @@ function HpBar({ current, max }) {
 }
 
 function Battle() {
-  const { state: gameState } = useGame()
+  const { state: gameState, dispatch } = useGame()
   const enemyId = gameState.selectedPokemonId
   const { status, pokemon: enemyPokemon, error } = usePokemon(enemyId)
+  const { status: speciesStatus, species } = useSpecies(enemyId)
 
   const [battle, setBattle] = useState(null)
 
@@ -35,9 +38,19 @@ function Battle() {
     }
   }, [status, enemyPokemon])
 
+  // Captura exitosa: actualizar estado a captured y persistir (Fase 4 ya
+  // persiste automáticamente en cada cambio del GameContext). Idempotente,
+  // así que un re-render de más no duplica nada.
+  useEffect(() => {
+    if (battle?.outcome === 'captured' && enemyId != null) {
+      dispatch({ type: GAME_ACTIONS.CAPTURE_POKEMON, id: enemyId })
+    }
+  }, [battle?.outcome, enemyId, dispatch])
+
   function handleAction(action) {
     if (!battle || battle.outcome) return
-    setBattle((prev) => resolveTurn(prev, action, enemyPokemon))
+    if (action === 'pokeball' && speciesStatus !== 'ready') return
+    setBattle((prev) => resolveTurn(prev, action, enemyPokemon, species?.capture_rate))
   }
 
   if (enemyId == null) {
@@ -97,12 +110,27 @@ function Battle() {
         <div className="battle-actions">
           <button className="btn" type="button" onClick={() => handleAction('attack')}>Attack</button>
           <button className="btn" type="button" onClick={() => handleAction('special')}>Special</button>
-          <button className="btn" type="button" onClick={() => handleAction('pokeball')}>Pokéball</button>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => handleAction('pokeball')}
+            disabled={speciesStatus !== 'ready'}
+          >
+            Pokéball
+          </button>
           <button className="btn" type="button" onClick={() => handleAction('run')}>Run</button>
         </div>
       )}
 
-      {battle.outcome && (
+      {battle.outcome === 'captured' && (
+        <div className="battle-outcome captured">
+          <p>¡Atrapaste a {capitalize(enemyPokemon.name)}! Quedó registrado como capturado en tu Pokédex.</p>
+          <Link className="btn" to="/pokedex">Ver Pokédex</Link>
+          <Link className="btn" to="/map">Volver al mapa</Link>
+        </div>
+      )}
+
+      {battle.outcome && battle.outcome !== 'captured' && (
         <div className="battle-outcome">
           <p>{OUTCOME_MESSAGES[battle.outcome]}</p>
           <Link className="btn" to="/map">Volver al mapa</Link>

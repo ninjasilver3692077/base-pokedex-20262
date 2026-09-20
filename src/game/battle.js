@@ -1,6 +1,8 @@
 // Motor de batalla puro (sin React, sin llamadas a API): recibe el
 // Pokémon rival ya cargado y produce/actualiza un estado de combate.
 // Deliberadamente simple: sin IV/EV/naturalezas/PP/precisión/clima/tipos.
+import { attemptCapture } from './capture.js'
+
 export const PLAYER_MAX_HP = 100
 
 const PLAYER_ATTACK_MIN = 10
@@ -63,16 +65,17 @@ function enemyCounterAttack(state, enemyPokemon) {
   }
 }
 
-// La Pokéball ya existe como acción y consume turno, pero su efecto real
-// (fórmula de captura con capture_rate) es responsabilidad de la Fase 9.
-function throwPokeball(state) {
-  return {
-    ...state,
-    log: [...state.log, 'El sistema de captura llega en la Fase 9: la Pokéball no tuvo efecto.'],
+// Captura exitosa termina el combate de inmediato (sin contraataque).
+// Captura fallida solo dice el mensaje: el combate sigue su curso normal.
+function throwPokeball(state, captureRate) {
+  const success = attemptCapture(state.enemyHp, state.enemyMaxHp, captureRate)
+  if (success) {
+    return { ...state, outcome: 'captured', log: [...state.log, '¡Capturaste al Pokémon salvaje!'] }
   }
+  return { ...state, log: [...state.log, 'La Pokéball no logró capturar al Pokémon salvaje.'] }
 }
 
-export function resolveTurn(state, action, enemyPokemon) {
+export function resolveTurn(state, action, enemyPokemon, captureRate) {
   if (state.outcome) return state
 
   if (action === 'run') {
@@ -82,7 +85,11 @@ export function resolveTurn(state, action, enemyPokemon) {
   let next = state
   if (action === 'attack') next = playerAttack(next)
   else if (action === 'special') next = playerSpecial(next)
-  else if (action === 'pokeball') next = throwPokeball(next)
+  else if (action === 'pokeball') next = throwPokeball(next, captureRate)
+
+  if (next.outcome === 'captured') {
+    return next
+  }
 
   if (next.enemyHp <= 0) {
     return { ...next, outcome: 'enemyFainted' }
