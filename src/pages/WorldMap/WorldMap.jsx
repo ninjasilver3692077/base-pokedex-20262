@@ -1,18 +1,27 @@
 import { Link } from 'react-router-dom'
-
-const placeholderZones = ['forest', 'ocean', 'volcano']
+import { ZONES } from '../../game/zones.js'
+import { capitalize } from '../../utils/text.js'
 
 function WorldMap() {
   return (
-    <section className="screen">
+    <section className="screen pokedex-screen">
       <h1>Mapa del mundo</h1>
-      <ul className="zone-list">
-        {placeholderZones.map((zoneId) => (
-          <li key={zoneId}>
-            <Link className="btn" to={`/explore/${zoneId}`}>{zoneId}</Link>
-          </li>
+      <p>Elige una zona para explorarla y buscar Pokémon salvajes.</p>
+
+      <div className="zone-grid">
+        {ZONES.map((zone) => (
+          <Link key={zone.id} to={`/explore/${zone.id}`} className="zone-card">
+            <h2>{zone.name}</h2>
+            <p>{zone.description}</p>
+            <div className="type-badges">
+              {zone.types.map((type) => (
+                <span key={type} className={`type-badge type-${type}`}>{capitalize(type)}</span>
+              ))}
+            </div>
+          </Link>
         ))}
-      </ul>
+      </div>
+
       <Link to="/pokedex">Ver Pokédex</Link>
     </section>
   )
