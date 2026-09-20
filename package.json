@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "verify:api": "node scripts/verify-pokeapi.mjs",
-    "verify:reducer": "node scripts/verify-game-reducer.mjs"
+    "verify:reducer": "node scripts/verify-game-reducer.mjs",
+    "verify:encounters": "node scripts/verify-encounters.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

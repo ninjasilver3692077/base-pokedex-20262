@@ -84,6 +84,15 @@ img {
   opacity: 0.85;
 }
 
+.wild-encounter {
+  margin-top: 1rem;
+}
+
+.explore-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
 .pokedex-screen {
   max-width: 960px;
 }
