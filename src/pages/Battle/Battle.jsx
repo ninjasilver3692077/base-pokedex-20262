@@ -16,7 +16,7 @@ function HpBar({ current, max }) {
   const level = percent <= 20 ? 'low' : percent <= 50 ? 'mid' : 'high'
   return (
     <div className="hp-bar">
-      <div className={`hp-bar-fill hp-bar-${level}`} style={{ width: `${percent}%` }} />
+      <div className={`hp-bar-fill hp-bar-${level}`} style={{ transform: `scaleX(${percent / 100})` }} />
       <span className="hp-bar-label">{current}/{max} HP</span>
     </div>
   )
