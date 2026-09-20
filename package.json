@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "verify:api": "node scripts/verify-pokeapi.mjs",
     "verify:reducer": "node scripts/verify-game-reducer.mjs",
-    "verify:encounters": "node scripts/verify-encounters.mjs"
+    "verify:encounters": "node scripts/verify-encounters.mjs",
+    "verify:battle": "node scripts/verify-battle.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",
