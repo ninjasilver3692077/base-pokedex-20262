@@ -35,7 +35,7 @@
 
 @keyframes player-hit-flash {
   0%, 100% { transform: translateX(0); color: inherit; }
-  20% { transform: translateX(-6px); color: #e94560; }
+  20% { transform: translateX(-6px); color: var(--color-accent); }
   40% { transform: translateX(6px); }
   60% { transform: translateX(-3px); }
   80% { transform: translateX(3px); }

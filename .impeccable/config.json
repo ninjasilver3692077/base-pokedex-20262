@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "capture-fail-bounce",
+        "createdAt": "2026-09-20T13:42:05.302Z",
+        "reason": "Assistant reviewed: capture-fail-bounce is a literal Pokémon hop/bounce reaction (translateY keyframe stops) after it escapes a failed Pokéball throw, i.e. domain-appropriate character motion, not tacky UI chrome. Its actual timing-function is standard 'ease-out', not an elastic/back cubic-bezier; the rule matched on the keyframe name, not the easing curve."
+      }
+    ]
+  }
+}

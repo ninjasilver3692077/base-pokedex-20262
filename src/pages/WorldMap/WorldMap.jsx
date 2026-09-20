@@ -22,7 +22,7 @@ function WorldMap() {
         ))}
       </div>
 
-      <Link to="/pokedex">Ver Pokédex</Link>
+      <Link to="/pokedex" className="text-link">Ver Pokédex</Link>
     </section>
   )
 }

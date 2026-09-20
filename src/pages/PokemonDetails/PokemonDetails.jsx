@@ -56,7 +56,7 @@ function PokemonDetails() {
 
   return (
     <section className="screen pokemon-details">
-      <Link to="/pokedex">&larr; Volver a la Pokédex</Link>
+      <Link to="/pokedex" className="text-link">&larr; Volver a la Pokédex</Link>
       <h1>
         #{String(pokemon.id).padStart(3, '0')} — {capitalize(pokemon.name)}
         {isCaptured && <span className="captured-badge">✓ Capturado</span>}
