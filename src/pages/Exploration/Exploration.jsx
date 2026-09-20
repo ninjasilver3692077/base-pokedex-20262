@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getZoneById } from '../../game/zones.js'
 import { getCandidateSpecies, pickRandomCandidate } from '../../game/encounters.js'
@@ -7,35 +7,68 @@ import { usePokemon } from '../../hooks/usePokemon.js'
 import { useGame } from '../../context/GameContext.jsx'
 import { GAME_ACTIONS } from '../../context/gameReducer.js'
 import { capitalize } from '../../utils/text.js'
+import PokedexUpdatedBanner from '../../components/common/PokedexUpdatedBanner.jsx'
+
+const DISCOVERY_BANNER_DURATION_MS = 4000
 
 function Exploration() {
   const { zoneId } = useParams()
   const zone = getZoneById(zoneId)
   const navigate = useNavigate()
-  const { dispatch } = useGame()
+  const { state, dispatch } = useGame()
   const { status: pokedexStatus, entries } = usePokedex()
 
-  const [explore, setExplore] = useState({ status: 'idle', encounterId: null, error: null })
+  const [explore, setExplore] = useState({
+    status: 'idle',
+    encounterId: null,
+    encounterName: null,
+    isNewDiscovery: false,
+    error: null,
+  })
   const encounter = usePokemon(explore.encounterId)
 
+  // El Pokémon queda "discovered" en cuanto aparece en el encuentro, sin
+  // importar qué pase después en la batalla (huir, perder, fallar la
+  // captura). DISCOVER_POKEMON es idempotente, así que siempre se puede
+  // disparar; isNewDiscovery se calcula ANTES para decidir si mostrar el
+  // aviso "POKÉDEX UPDATED!".
   async function handleExplore() {
-    setExplore({ status: 'exploring', encounterId: null, error: null })
+    setExplore({ status: 'exploring', encounterId: null, encounterName: null, isNewDiscovery: false, error: null })
     try {
       const speciesByName = new Map(entries.map((entry) => [entry.name, entry]))
       const candidates = await getCandidateSpecies(zone, speciesByName)
       const picked = pickRandomCandidate(candidates)
 
       if (!picked) {
-        setExplore({ status: 'empty', encounterId: null, error: null })
+        setExplore({ status: 'empty', encounterId: null, encounterName: null, isNewDiscovery: false, error: null })
         return
       }
 
+      const isNewDiscovery =
+        !state.discoveredPokemonIds.includes(picked.id) && !state.capturedPokemonIds.includes(picked.id)
+
       dispatch({ type: GAME_ACTIONS.SELECT_POKEMON, id: picked.id })
-      setExplore({ status: 'found', encounterId: picked.id, error: null })
+      dispatch({ type: GAME_ACTIONS.DISCOVER_POKEMON, id: picked.id })
+
+      setExplore({
+        status: 'found',
+        encounterId: picked.id,
+        encounterName: picked.name,
+        isNewDiscovery,
+        error: null,
+      })
     } catch (error) {
-      setExplore({ status: 'error', encounterId: null, error })
+      setExplore({ status: 'error', encounterId: null, encounterName: null, isNewDiscovery: false, error })
     }
   }
+
+  useEffect(() => {
+    if (explore.status !== 'found' || !explore.isNewDiscovery) return undefined
+    const timer = setTimeout(() => {
+      setExplore((prev) => ({ ...prev, isNewDiscovery: false }))
+    }, DISCOVERY_BANNER_DURATION_MS)
+    return () => clearTimeout(timer)
+  }, [explore.status, explore.isNewDiscovery, explore.encounterId])
 
   if (!zone) {
     return (
@@ -81,6 +114,12 @@ function Exploration() {
 
       {explore.status === 'found' && (
         <div className="wild-encounter">
+          {explore.isNewDiscovery && (
+            <PokedexUpdatedBanner
+              pokemonName={explore.encounterName}
+              onDismiss={() => setExplore((prev) => ({ ...prev, isNewDiscovery: false }))}
+            />
+          )}
           <p>¡Un Pokémon salvaje apareció!</p>
           {encounter.status === 'ready' && encounter.pokemon ? (
             <>
