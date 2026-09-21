@@ -13,7 +13,8 @@ function PokemonDetails() {
   const isCaptured = capturedPokemonIds.includes(id)
   const isDiscovered = isCaptured || discoveredPokemonIds.includes(id)
 
-  const { status, pokemon, error } = usePokemon(isValidId && isDiscovered ? id : null)
+  // La progresión solo añade una etiqueta. Nunca bloquea el catálogo.
+  const { status, pokemon, error } = usePokemon(isValidId ? id : null)
 
   if (!isValidId) {
     return (
@@ -24,20 +25,11 @@ function PokemonDetails() {
     )
   }
 
-  if (!isDiscovered) {
-    return (
-      <section className="screen">
-        <h1>#{String(id).padStart(3, '0')} — ???</h1>
-        <p>Todavía no has descubierto este Pokémon. Explora el mundo para encontrarlo.</p>
-        <Link className="btn" to="/pokedex">Volver a la Pokédex</Link>
-      </section>
-    )
-  }
-
   if (status === 'loading') {
     return (
       <section className="screen">
         <h1>Cargando...</h1>
+        <p role="status">Consultando PokéAPI.</p>
       </section>
     )
   }
@@ -46,7 +38,7 @@ function PokemonDetails() {
     return (
       <section className="screen">
         <h1>Error</h1>
-        <p>No se pudo cargar este Pokémon desde PokéAPI. {error?.message}</p>
+        <p role="alert">No se pudo cargar este Pokémon desde PokéAPI. {error?.message}</p>
         <Link className="btn" to="/pokedex">Volver a la Pokédex</Link>
       </section>
     )
@@ -59,8 +51,10 @@ function PokemonDetails() {
       <Link to="/pokedex" className="text-link">&larr; Volver a la Pokédex</Link>
       <h1>
         #{String(pokemon.id).padStart(3, '0')} — {capitalize(pokemon.name)}
-        {isCaptured && <span className="captured-badge">✓ Capturado</span>}
       </h1>
+      <p role="status" className={`detail-status status-${isCaptured ? 'captured' : isDiscovered ? 'discovered' : 'undiscovered'}`}>
+        {isCaptured ? '● CAPTURADO' : isDiscovered ? '◐ DESCUBIERTO' : '○ NO DESCUBIERTO'}
+      </p>
 
       <div className="pokemon-details-sprite sprite-appear">
         {artwork ? <img className="sprite-idle" src={artwork} alt={pokemon.name} /> : <span className="placeholder">?</span>}

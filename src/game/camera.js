@@ -1,9 +1,13 @@
 // Cámara pura: dado el foco (posición del jugador en tiles) y el mapa,
 // calcula el offset del viewport, centrando cuando hay espacio y
 // clampando en los bordes para no mostrar fuera del mapa.
-export const TILE_SIZE_PX = 32
-export const VIEWPORT_TILES_X = 11
-export const VIEWPORT_TILES_Y = 9
+// El viewport es la pantalla del juego, no una miniatura: 21x13 tiles de
+// 40px (840x520 lógicos) que GameViewport escala para llenar el espacio
+// disponible. Sigue siendo menor que cualquier mapa (30x22), así que la
+// cámara clampea de verdad en los cuatro bordes.
+export const TILE_SIZE_PX = 40
+export const VIEWPORT_TILES_X = 21
+export const VIEWPORT_TILES_Y = 13
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)

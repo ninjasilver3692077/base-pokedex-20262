@@ -1,0 +1,328 @@
+/* Pantalla de combate. Sigue la lectura de un RPG por turnos: arena con
+   cielo, suelo y dos plataformas; cajas de datos en diagonal (rival
+   arriba-izquierda, jugador abajo-derecha); y abajo una consola partida
+   en caja de diálogo + menú de acciones. Nada de tarjetas apiladas. */
+
+.battle-screen {
+  max-width: 1000px;
+}
+
+.battle-arena {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 60vh;
+  overflow: hidden;
+  border: 4px solid #17242e;
+  box-shadow: inset 0 0 0 3px #2f4a5c, 0 8px 0 rgba(0, 0, 0, 0.35);
+  image-rendering: pixelated;
+}
+
+.arena-sky {
+  position: absolute;
+  inset: 0 0 42% 0;
+  background: radial-gradient(ellipse at 76% 96%, #7fc16a 0 22%, transparent 23%),
+    radial-gradient(ellipse at 22% 100%, #6fb25e 0 26%, transparent 27%),
+    linear-gradient(180deg, #9fe3f5 0%, #d6f3d0 100%);
+}
+
+.arena-ground {
+  position: absolute;
+  inset: 42% 0 0 0;
+  background: linear-gradient(180deg, #6fbf5c 0 14%, #4fa347 14% 55%, #3f8a3c 55% 100%);
+  background-image: radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.18) 0 18%, transparent 19%),
+    repeating-linear-gradient(96deg, rgba(0, 0, 0, 0.07) 0 4px, transparent 4px 14px),
+    linear-gradient(180deg, #6fbf5c 0 14%, #4fa347 14% 55%, #3f8a3c 55% 100%);
+}
+
+.battle-slot {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.slot-enemy {
+  right: 8%;
+  top: 12%;
+  width: 190px;
+  height: 190px;
+}
+
+.slot-player {
+  left: 8%;
+  bottom: 4%;
+  width: 230px;
+  height: 230px;
+}
+
+.battle-platform {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 40%, #8fd47a 0 55%, #5da84f 56% 78%, #47893f 79% 100%);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+.platform-enemy {
+  width: 170px;
+  height: 46px;
+}
+
+.platform-player {
+  width: 210px;
+  height: 56px;
+}
+
+.battle-sprite {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  margin-bottom: -34px;
+}
+
+.slot-enemy .battle-sprite img {
+  width: 150px;
+  height: 150px;
+}
+
+.slot-player .battle-sprite img {
+  width: 190px;
+  height: 190px;
+}
+
+/* Silueta de respaldo cuando todavía no hay starter elegido: el hueco
+   del jugador nunca queda vacío. */
+.trainer-stand {
+  width: 86px;
+  height: 120px;
+  background: linear-gradient(180deg, #e3350d 0 22%, #f0c090 22% 34%, #2a75bb 34% 74%, #26311f 74% 92%, #fdfdfd 92% 100%);
+  box-shadow: inset -10px 0 0 rgba(0, 0, 0, 0.18);
+}
+
+.battle-info {
+  position: absolute;
+  z-index: 3;
+  min-width: 250px;
+  padding: 0.55rem 0.8rem 0.5rem;
+  background: #f4f1e0;
+  color: #1b2a33;
+  border: 3px solid #2b4150;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.battle-info-enemy {
+  left: 3%;
+  top: 6%;
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+  padding-right: 2rem;
+}
+
+.battle-info-player {
+  right: 3%;
+  bottom: 6%;
+  clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
+  padding-left: 2rem;
+}
+
+.battle-info-name {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  line-height: 1.5;
+  text-transform: capitalize;
+}
+
+.hp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hp-tag {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  color: #c9820f;
+}
+
+.hp-bar {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: #4c5a62;
+  border: 2px solid #1b2a33;
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+
+.hp-bar-high { background: #3cb043; }
+.hp-bar-mid { background: #f0b429; }
+.hp-bar-low { background: #e3350d; }
+
+.hp-numbers {
+  margin: 0.25rem 0 0;
+  text-align: right;
+  font-size: 1.05rem;
+  color: #2b4150;
+}
+
+.battle-console {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 340px);
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.dialogue-box {
+  padding: 1rem 1.1rem;
+  background: #f4f1e0;
+  color: #1b2a33;
+  border: 4px solid #2b4150;
+  box-shadow: inset 0 0 0 3px #d8d2b6, 0 6px 0 rgba(0, 0, 0, 0.3);
+  font-size: 1.35rem;
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dialogue-box p {
+  margin: 0;
+}
+
+.dialogue-highlight {
+  margin-top: 0.4rem;
+  color: #1f7a33;
+  font-weight: bold;
+}
+
+.battle-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 58px;
+  padding: 0.6rem 0.5rem;
+  background: #f4f1e0;
+  color: #1b2a33;
+  text-decoration: none;
+  border: 4px solid #2b4150;
+  box-shadow: inset 0 0 0 3px #d8d2b6, 0 5px 0 rgba(0, 0, 0, 0.3);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #fffce8;
+  color: #b3300f;
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: inset 0 0 0 3px #d8d2b6;
+}
+
+.action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.action-primary {
+  background: #e3350d;
+  color: #fff4d6;
+  box-shadow: inset 0 0 0 3px #ff8a63, 0 5px 0 rgba(0, 0, 0, 0.35);
+}
+
+.action-primary:hover {
+  background: #ff4a1d;
+  color: #fff;
+}
+
+.action-hint {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.battle-log {
+  list-style: none;
+  padding: 0.6rem 0.9rem;
+  margin: 0.75rem 0 0;
+  background: #102536;
+  border: 2px solid #45657a;
+  font-size: 1.05rem;
+  color: #cfe3e8;
+  min-height: 2.5rem;
+}
+
+.pokeball-icon {
+  position: absolute;
+  top: 10%;
+  right: 12%;
+  z-index: 4;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(
+    to bottom,
+    var(--color-accent) 0%,
+    var(--color-accent) 48%,
+    #1b2a33 48%,
+    #1b2a33 52%,
+    #fdfdfd 52%,
+    #fdfdfd 100%
+  );
+  border: 2px solid #1b2a33;
+}
+
+.pokeball-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  background: #fdfdfd;
+  border: 2px solid #1b2a33;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 760px) {
+  .battle-console {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-info {
+    min-width: 0;
+    width: 46%;
+    font-size: 0.9rem;
+  }
+
+  .slot-enemy { width: 130px; height: 130px; right: 5%; }
+  .slot-player { width: 150px; height: 150px; left: 5%; }
+  .slot-enemy .battle-sprite img { width: 100px; height: 100px; }
+  .slot-player .battle-sprite img { width: 120px; height: 120px; }
+  .platform-enemy { width: 116px; height: 32px; }
+  .platform-player { width: 140px; height: 38px; }
+}

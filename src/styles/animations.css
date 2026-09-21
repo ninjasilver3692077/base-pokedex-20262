@@ -127,3 +127,22 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+@keyframes lava-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+
+@keyframes encounter-flash {
+  0% { background: #fff4d6; }
+  12% { background: #0b0d12; }
+  24% { background: #fff4d6; }
+  36% { background: #0b0d12; }
+  48% { background: #e3350d; }
+  60%, 100% { background: #0b0d12; }
+}
+
+@keyframes travel-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}

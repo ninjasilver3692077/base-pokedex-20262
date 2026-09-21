@@ -38,13 +38,27 @@ function main() {
   assert.deepEqual(invalidDirection.position, { x: 1, y: 1 })
   assert.equal(invalidDirection.blocked, true)
 
-  // Integración con el mapa real de Central Town: el spawn tiene un
-  // tramo de árboles justo debajo (borde del pueblo) y hierba alta arriba.
+  // Integración con el mapa real de Central Town: desde el spawn (la
+  // plaza) se puede caminar por el camino en ambos sentidos verticales,
+  // y el marco de árboles del mapa nunca se puede cruzar.
   const fromSpawnDown = resolveStep(CENTRAL_TOWN_MAP.spawn, 'down', CENTRAL_TOWN_MAP)
-  assert.equal(fromSpawnDown.blocked, true, 'el borde de árboles debajo del spawn debe bloquear')
+  assert.equal(fromSpawnDown.blocked, false, 'el camino bajo el spawn debe ser transitable')
 
   const fromSpawnUp = resolveStep(CENTRAL_TOWN_MAP.spawn, 'up', CENTRAL_TOWN_MAP)
-  assert.equal(fromSpawnUp.blocked, false, 'debe poder caminar hacia la hierba alta arriba del spawn')
+  assert.equal(fromSpawnUp.blocked, false, 'el camino sobre el spawn debe ser transitable')
+
+  assert.equal(
+    resolveStep({ x: 0, y: 0 }, 'up', CENTRAL_TOWN_MAP).blocked,
+    true,
+    'no debe poder salirse por el borde superior del mapa real',
+  )
+
+  // El marco de árboles del pueblo bloquea de verdad.
+  assert.equal(
+    resolveStep({ x: 1, y: 2 }, 'left', CENTRAL_TOWN_MAP).blocked,
+    true,
+    'el marco de árboles del pueblo debe bloquear',
+  )
 
   console.log('OK: resolución de movimiento (paso, colisión con obstáculo, borde de mapa, integración con Central Town) verificada.')
 }

@@ -75,15 +75,16 @@ function Exploration() {
       <section className="screen">
         <h1>Zona desconocida</h1>
         <p>No existe una zona llamada "{zoneId}".</p>
-        <Link className="btn" to="/map">Volver al mapa</Link>
+        <Link className="btn" to="/map">Volver al mundo</Link>
       </section>
     )
   }
 
   return (
     <section className="screen">
+      <p className="eyebrow">RUTA DE EXPLORACIÓN</p>
       <h1>{zone.name}</h1>
-      <p>{zone.description}</p>
+      <p className="screen-lead">{zone.description}</p>
       <div className="type-badges">
         {zone.types.map((type) => (
           <span key={type} className={`type-badge type-${type}`}>{capitalize(type)}</span>
@@ -96,7 +97,7 @@ function Exploration() {
         </button>
       )}
 
-      {explore.status === 'exploring' && <p>Explorando...</p>}
+      {explore.status === 'exploring' && <p role="status">Explorando...</p>}
 
       {explore.status === 'empty' && (
         <>
@@ -120,7 +121,7 @@ function Exploration() {
               onDismiss={() => setExplore((prev) => ({ ...prev, isNewDiscovery: false }))}
             />
           )}
-          <p>¡Un Pokémon salvaje apareció!</p>
+          <p className="encounter-headline" role="status">¡Un Pokémon salvaje apareció!</p>
           {encounter.status === 'ready' && encounter.pokemon ? (
             <>
               <div key={explore.encounterId} className="pokemon-details-sprite sprite-appear">
@@ -136,7 +137,19 @@ function Exploration() {
             <p>Cargando datos del Pokémon...</p>
           )}
           <div className="explore-actions">
-            <button className="btn" type="button" onClick={() => navigate('/battle')}>Enfrentar</button>
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                // Misma entrada a combate que el mundo: snapshotea la
+                // posición para que EXIT_BATTLE devuelva al jugador al
+                // mismo lugar en vez de dejar el modo colgado.
+                dispatch({ type: GAME_ACTIONS.ENTER_BATTLE })
+                navigate('/battle')
+              }}
+            >
+              Enfrentar
+            </button>
             <button className="btn" type="button" onClick={handleExplore}>Explorar de nuevo</button>
           </div>
         </div>

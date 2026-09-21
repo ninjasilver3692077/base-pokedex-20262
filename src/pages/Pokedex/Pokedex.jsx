@@ -19,7 +19,7 @@ function Pokedex() {
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
     return entries.filter((entry) => {
-      const matchesSearch = query === '' || entry.name.includes(query)
+      const matchesSearch = query === '' || entry.name.includes(query) || String(entry.id).padStart(3, '0').includes(query) || String(entry.id).includes(query)
       const matchesStatus = statusFilter === 'all' || entry.status === statusFilter
       return matchesSearch && matchesStatus
     })
@@ -45,8 +45,8 @@ function Pokedex() {
   if (status === 'loading') {
     return (
       <section className="screen">
-        <h1>Pokédex</h1>
-        <p>Cargando catálogo...</p>
+        <p className="eyebrow">REGISTRO DE ESPECIES</p><h1>Pokédex</h1>
+        <p role="status">Cargando catálogo de PokéAPI...</p>
       </section>
     )
   }
@@ -54,8 +54,8 @@ function Pokedex() {
   if (status === 'error') {
     return (
       <section className="screen">
-        <h1>Pokédex</h1>
-        <p>No se pudo cargar el catálogo desde PokéAPI. {error?.message}</p>
+        <p className="eyebrow">REGISTRO DE ESPECIES</p><h1>Pokédex</h1>
+        <p role="alert">No se pudo cargar el catálogo desde PokéAPI. {error?.message}</p>
         <button className="btn" type="button" onClick={retry}>Reintentar</button>
       </section>
     )
@@ -63,7 +63,7 @@ function Pokedex() {
 
   return (
     <section className="screen pokedex-screen">
-      <h1>Pokédex</h1>
+      <p className="eyebrow">REGISTRO DE ESPECIES</p><h1>Pokédex</h1>
       <p className="pokedex-progress">
         {capturedCount} capturados · {discoveredCount} descubiertos · {entries.length} especies totales
       </p>
@@ -71,16 +71,18 @@ function Pokedex() {
       <div className="pokedex-controls">
         <input
           type="search"
-          placeholder="Buscar por nombre..."
+          placeholder="Buscar por nombre o número..."
+          aria-label="Buscar Pokémon por nombre o número"
           value={search}
           onChange={handleSearchChange}
         />
-        <div className="pokedex-filters">
+        <div className="pokedex-filters" role="group" aria-label="Filtrar por estado">
           {STATUS_FILTERS.map(({ value, label }) => (
             <button
               key={value}
               type="button"
               className={statusFilter === value ? 'filter-btn active' : 'filter-btn'}
+              aria-pressed={statusFilter === value}
               onClick={() => handleStatusChange(value)}
             >
               {label}
@@ -90,7 +92,7 @@ function Pokedex() {
       </div>
 
       {pageEntries.length === 0 ? (
-        <p>No hay Pokémon que coincidan con la búsqueda.</p>
+        <p role="status">No hay Pokémon que coincidan con la búsqueda.</p>
       ) : (
         <div className="pokedex-grid">
           {pageEntries.map((entry) => (

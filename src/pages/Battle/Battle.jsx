@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useGame } from '../../context/GameContext.jsx'
 import { usePokemon } from '../../hooks/usePokemon.js'
 import { useSpecies } from '../../hooks/useSpecies.js'
@@ -12,24 +12,44 @@ const OUTCOME_MESSAGES = {
   enemyFainted: 'El Pokémon salvaje se debilitó por completo y ya no se puede capturar.',
   playerDefeated: 'Te quedaste sin fuerzas y el Pokémon salvaje escapó.',
   fled: 'Huiste del combate.',
+  captured: '¡Quedó registrado como capturado en tu Pokédex!',
 }
 
-function HpBar({ current, max }) {
+const ACTIONS = [
+  { action: 'attack', label: 'Atacar' },
+  { action: 'special', label: 'Especial' },
+  { action: 'pokeball', label: 'Pokéball' },
+  { action: 'run', label: 'Huir' },
+]
+
+// Caja de datos estilo RPG: nombre, nivel y barra de HP dentro de un
+// panel con esquina cortada, en vez de una tarjeta web centrada.
+function InfoBox({ name, current, max, side }) {
   const percent = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0
   const level = percent <= 20 ? 'low' : percent <= 50 ? 'mid' : 'high'
   return (
-    <div className="hp-bar">
-      <div className={`hp-bar-fill hp-bar-${level}`} style={{ transform: `scaleX(${percent / 100})` }} />
-      <span className="hp-bar-label">{current}/{max} HP</span>
+    <div className={`battle-info battle-info-${side}`}>
+      <p className="battle-info-name">{name}</p>
+      <div className="hp-row">
+        <span className="hp-tag">HP</span>
+        <div className="hp-bar">
+          <div className={`hp-bar-fill hp-bar-${level}`} style={{ transform: `scaleX(${percent / 100})` }} />
+        </div>
+      </div>
+      <p className="hp-numbers">
+        {current}/{max}
+      </p>
     </div>
   )
 }
 
 function Battle() {
   const { state: gameState, dispatch } = useGame()
+  const navigate = useNavigate()
   const enemyId = gameState.selectedPokemonId
   const { status, pokemon: enemyPokemon, error } = usePokemon(enemyId)
   const { status: speciesStatus, species } = useSpecies(enemyId)
+  const { pokemon: starter } = usePokemon(gameState.starterPokemonId)
 
   const [battle, setBattle] = useState(null)
   // effects.tick fuerza el remount de los elementos animados de cada turno
@@ -53,6 +73,13 @@ function Battle() {
     }
   }, [battle?.outcome, enemyId, dispatch])
 
+  // Única salida del combate: EXIT_BATTLE devuelve mode a 'world' y
+  // restaura la región y el tile exactos que ENTER_BATTLE snapshoteó.
+  const returnToWorld = useCallback(() => {
+    dispatch({ type: GAME_ACTIONS.EXIT_BATTLE })
+    navigate('/map')
+  }, [dispatch, navigate])
+
   function handleAction(action) {
     if (!battle || battle.outcome) return
     if (action === 'pokeball' && speciesStatus !== 'ready') return
@@ -75,8 +102,8 @@ function Battle() {
     return (
       <section className="screen">
         <h1>Sin combate activo</h1>
-        <p>Explora una zona para encontrar un Pokémon salvaje antes de entrar en batalla.</p>
-        <Link className="btn" to="/map">Ir al mapa</Link>
+        <p>Camina por la hierba alta del mundo para encontrar un Pokémon salvaje.</p>
+        <Link className="btn" to="/map">Ir al mundo</Link>
       </section>
     )
   }
@@ -86,7 +113,7 @@ function Battle() {
       <section className="screen">
         <h1>Error</h1>
         <p>No se pudo cargar al Pokémon rival desde PokéAPI. {error?.message}</p>
-        <Link className="btn" to="/map">Volver al mapa</Link>
+        <button className="btn" type="button" onClick={returnToWorld}>Volver al mundo</button>
       </section>
     )
   }
@@ -95,22 +122,33 @@ function Battle() {
     return (
       <section className="screen">
         <h1>Cargando combate...</h1>
+        <p role="status">Preparando al Pokémon salvaje.</p>
       </section>
     )
   }
 
   const sprite = enemyPokemon.sprites?.front_default
+  const playerSprite = starter?.sprites?.back_default ?? starter?.sprites?.front_default
+  const playerName = starter ? capitalize(starter.name) : 'Tu equipo'
+  const lastMessage = battle.log[battle.log.length - 1]
+  const message = battle.outcome
+    ? `${OUTCOME_MESSAGES[battle.outcome] ?? ''}`
+    : (lastMessage ?? `¡Un ${capitalize(enemyPokemon.name)} salvaje apareció!`)
 
   return (
     <section className="screen battle-screen">
-      <h1>Combate salvaje</h1>
+      <div className="battle-arena">
+        <div className="arena-sky" aria-hidden="true" />
+        <div className="arena-ground" aria-hidden="true" />
 
-      <div className="battle-field">
-        <div className="battle-enemy">
-          <h2>{capitalize(enemyPokemon.name)}</h2>
-          <HpBar current={battle.enemyHp} max={battle.enemyMaxHp} />
-          <div key={effects.tick} className={effects.tick === 0 ? 'sprite-appear' : effects.enemyClass}>
-            {sprite ? <img className="sprite-idle" src={sprite} alt={enemyPokemon.name} /> : <span className="placeholder">?</span>}
+        <div className="battle-slot slot-enemy">
+          <span className="battle-platform platform-enemy" aria-hidden="true" />
+          <div key={effects.tick} className={`battle-sprite ${effects.tick === 0 ? 'sprite-appear' : effects.enemyClass}`}>
+            {sprite ? (
+              <img className="sprite-idle" src={sprite} alt={`${enemyPokemon.name} salvaje`} />
+            ) : (
+              <span className="placeholder">?</span>
+            )}
           </div>
           {(effects.enemyClass === 'capture-fail-bounce' || effects.enemyClass === 'capture-success') && (
             <PokeballIcon
@@ -120,47 +158,67 @@ function Battle() {
           )}
         </div>
 
-        <div className="battle-player">
-          <h2 key={effects.tick} className={effects.playerClass}>Tú</h2>
-          <HpBar current={battle.playerHp} max={battle.playerMaxHp} />
+        <div className="battle-slot slot-player">
+          <span className="battle-platform platform-player" aria-hidden="true" />
+          <div key={`p-${effects.tick}`} className={`battle-sprite ${effects.playerClass}`}>
+            {playerSprite ? (
+              <img className="sprite-idle" src={playerSprite} alt={playerName} />
+            ) : (
+              <span className="trainer-stand" aria-hidden="true" />
+            )}
+          </div>
         </div>
+
+        <InfoBox
+          name={`${capitalize(enemyPokemon.name)} salvaje`}
+          current={battle.enemyHp}
+          max={battle.enemyMaxHp}
+          side="enemy"
+        />
+        <InfoBox name={playerName} current={battle.playerHp} max={battle.playerMaxHp} side="player" />
       </div>
 
-      <ul className="battle-log">
-        {battle.log.slice(-4).map((entry, index) => (
-          <li key={index}>{entry}</li>
-        ))}
-      </ul>
-
-      {!battle.outcome && (
-        <div className="battle-actions">
-          <button className="btn" type="button" onClick={() => handleAction('attack')}>Attack</button>
-          <button className="btn" type="button" onClick={() => handleAction('special')}>Special</button>
-          <button
-            className="btn"
-            type="button"
-            onClick={() => handleAction('pokeball')}
-            disabled={speciesStatus !== 'ready'}
-          >
-            Pokéball
-          </button>
-          <button className="btn" type="button" onClick={() => handleAction('run')}>Run</button>
+      <div className="battle-console">
+        <div className="dialogue-box" role="status" aria-live="polite">
+          <p>{message}</p>
+          {battle.outcome === 'captured' && (
+            <p className="dialogue-highlight">¡Atrapaste a {capitalize(enemyPokemon.name)}!</p>
+          )}
         </div>
-      )}
 
-      {battle.outcome === 'captured' && (
-        <div className="battle-outcome captured">
-          <p>¡Atrapaste a {capitalize(enemyPokemon.name)}! Quedó registrado como capturado en tu Pokédex.</p>
-          <Link className="btn" to="/pokedex">Ver Pokédex</Link>
-          <Link className="btn" to="/map">Volver al mapa</Link>
-        </div>
-      )}
+        {!battle.outcome ? (
+          <div className="battle-actions" role="group" aria-label="Acciones de combate">
+            {ACTIONS.map(({ action, label }) => (
+              <button
+                key={action}
+                className="action-btn"
+                type="button"
+                onClick={() => handleAction(action)}
+                disabled={action === 'pokeball' && speciesStatus !== 'ready'}
+              >
+                {label}
+                {action === 'pokeball' && speciesStatus !== 'ready' && (
+                  <span className="action-hint">cargando…</span>
+                )}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="battle-actions battle-outcome">
+            <button className="action-btn action-primary" type="button" onClick={returnToWorld}>
+              Volver al mundo
+            </button>
+            <Link className="action-btn" to="/pokedex">Ver Pokédex</Link>
+          </div>
+        )}
+      </div>
 
-      {battle.outcome && battle.outcome !== 'captured' && (
-        <div className="battle-outcome">
-          <p>{OUTCOME_MESSAGES[battle.outcome]}</p>
-          <Link className="btn" to="/map">Volver al mapa</Link>
-        </div>
+      {battle.log.length > 0 && (
+        <ul className="battle-log" aria-label="Historial del combate">
+          {battle.log.slice(-3).map((entry, index) => (
+            <li key={`${index}-${entry}`}>{entry}</li>
+          ))}
+        </ul>
       )}
     </section>
   )

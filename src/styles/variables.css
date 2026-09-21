@@ -2,14 +2,14 @@
   /* Fase 11B: paleta viva inspirada en los RPG Pokémon de la era GBA,
      reemplaza el azul-marino dominante de la Fase 11 original. Mapeo
      semántico preservado (mismo token, valor invertido claro/oscuro). */
-  --color-bg: #f4ecd2;
-  --color-panel: #fffaf0;
+  --color-bg: #101d2b;
+  --color-panel: #172b3d;
   --color-border: #2b3a55;
   --color-accent: #e3350d;
   --color-accent-blue: #2a75bb;
   --color-success: #3cb043;
   --color-warning: #ffcb05;
-  --color-text: #26311f;
+  --color-text: #fff4d6;
   --color-shadow: #1c2740;
 
   /* Nivel "mundo": lo consume src/game/tiles.js vía world.css (Fase 11C+).

@@ -7,6 +7,7 @@ import './styles/variables.css'
 import './styles/global.css'
 import './styles/animations.css'
 import './styles/world.css'
+import './styles/battle.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
