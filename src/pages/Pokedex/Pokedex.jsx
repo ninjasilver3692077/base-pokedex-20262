@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePokedex } from '../../hooks/usePokedex.js'
 import PokedexCard from '../../components/pokedex/PokedexCard.jsx'
+import { playSound } from '../../audio/sounds.js'
 
 const PAGE_SIZE = 24
 const STATUS_FILTERS = [
@@ -15,6 +16,10 @@ function Pokedex() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    playSound('pokeMenu')
+  }, [])
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()

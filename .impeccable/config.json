@@ -8,6 +8,15 @@
         "value": "capture-fail-bounce",
         "createdAt": "2026-09-20T13:42:05.302Z",
         "reason": "Assistant reviewed: capture-fail-bounce is a literal Pokémon hop/bounce reaction (translateY keyframe stops) after it escapes a failed Pokéball throw, i.e. domain-appropriate character motion, not tacky UI chrome. Its actual timing-function is standard 'ease-out', not an elastic/back cubic-bezier; the rule matched on the keyframe name, not the easing curve."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/styles/global.css"
+        ],
+        "createdAt": "2026-09-21T20:03:59.365Z",
+        "reason": "Claude triage: no card side-tabs. L99 .home-path border-left/right are the lit edges of the illustrated dirt path in the Home scene; L349 .nav-bar border-bottom is the full-width red divider of the documented Pokemon-cartridge art direction. Both predate this session (session only added .mute-btn); not user confirmed."
       }
     ]
   }

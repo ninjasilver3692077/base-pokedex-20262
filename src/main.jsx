@@ -7,11 +7,15 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { GameProvider } from './context/GameContext.jsx'
+import { initUiSelectSound, startMusicOnFirstGesture } from './audio/sounds.js'
 import './styles/variables.css'
 import './styles/global.css'
 import './styles/animations.css'
 import './styles/world.css'
 import './styles/battle.css'
+
+initUiSelectSound()
+startMusicOnFirstGesture()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

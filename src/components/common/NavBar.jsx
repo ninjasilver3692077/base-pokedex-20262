@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { isMuted, toggleMute } from '../../audio/sounds.js'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -8,6 +10,8 @@ const links = [
 ]
 
 function NavBar() {
+  const [muted, setMuted] = useState(isMuted)
+
   return (
     <nav className="nav-bar">
       {links.map(({ to, label }) => (
@@ -19,6 +23,16 @@ function NavBar() {
           {label}
         </NavLink>
       ))}
+      <button
+        className="mute-btn"
+        type="button"
+        data-sfx="off"
+        aria-pressed={muted}
+        aria-label={muted ? 'Activar sonido' : 'Silenciar sonido'}
+        onClick={() => setMuted(toggleMute())}
+      >
+        {muted ? '🔇' : '🔊'}
+      </button>
     </nav>
   )
 }

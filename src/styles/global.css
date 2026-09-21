@@ -382,6 +382,31 @@ h2 {
   box-shadow: 0 3px 0 #7d1c06;
 }
 
+/* Control de sonido al extremo opuesto de la barra: la música en bucle
+   necesita una forma visible de apagarse. */
+.mute-btn {
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 34px;
+  padding: 0.3rem 0.5rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--color-text);
+  background: #16283a;
+  border: 2px solid #2f4a5c;
+  border-radius: var(--panel-radius);
+  cursor: pointer;
+}
+
+.mute-btn:hover {
+  border-color: #5b87a3;
+}
+
+.mute-btn:focus-visible {
+  outline: 3px solid #f5c451;
+  outline-offset: 3px;
+}
+
 /* Escena del Home: el camino sube en perspectiva desde el borde
    inferior hacia el horizonte, en vez de ser una losa inclinada que
    tapaba media ilustración. */
