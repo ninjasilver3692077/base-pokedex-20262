@@ -1,6 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+// HashRouter en vez de BrowserRouter: GitHub Pages no reescribe rutas al
+// servidor (no hay backend), así que recargar /pokedex/25 daría 404 con
+// BrowserRouter. Con hash (#/pokedex/25) el servidor siempre sirve
+// index.html y React Router resuelve la ruta en el cliente.
+import { HashRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { GameProvider } from './context/GameContext.jsx'
 import './styles/variables.css'
@@ -11,10 +15,10 @@ import './styles/battle.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <GameProvider>
         <App />
       </GameProvider>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>,
 )
