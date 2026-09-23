@@ -9,17 +9,25 @@
    (arena/roca) puestos por el compositor, no con auto-tiling. */
 
 .game-stage {
-  display: flex;
-  justify-content: center;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  margin: 0.75rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .game-viewport {
   position: relative;
   overflow: hidden;
   flex: none;
-  transform-origin: top center;
+  /* center center: .game-stage centra este elemento en ambos ejes
+     (align-items + justify-content), así que el origen del scale debe
+     coincidir con ese centro. Con "top center" (el de cuando .game-stage
+     tenía una altura fija exacta al contenido) el escalado se anclaba
+     arriba y el mapa quedaba desplazado fuera del área visible. */
+  transform-origin: center center;
   border: 4px solid #17242e;
   box-shadow: 0 0 0 4px #2f4a5c, 0 12px 0 rgba(0, 0, 0, 0.35);
   image-rendering: pixelated;
@@ -518,7 +526,7 @@
 }
 
 .encounter-transition span {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   color: var(--color-warning);
   text-shadow: 3px 3px 0 #000;
@@ -535,54 +543,36 @@
 /* --- HUD --------------------------------------------------------- */
 
 .world-screen {
-  max-width: 1280px;
-}
-
-.world-hud {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+/* Barra de estado mínima, tipo Game Boy: una sola línea, para que el
+   viewport del juego se quede con casi toda la pantalla en vez de compartir
+   espacio con paneles HUD grandes de web. */
+.world-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 0.75rem;
-  align-items: stretch;
-}
-
-.world-hud-bottom {
-  margin-top: 0.75rem;
-}
-
-.hud-panel {
-  flex: 1 1 200px;
-  padding: 0.6rem 0.8rem;
-  background: linear-gradient(180deg, #1d3245, #142433);
-  border: 3px solid #4d7690;
-  box-shadow: inset 0 0 0 2px #0e1a24, 0 4px 0 rgba(0, 0, 0, 0.35);
+  padding: 0.3rem 0.5rem;
+  background: #142433;
+  border: 2px solid #2f4a5c;
   color: var(--color-text);
-}
-
-.hud-panel p {
-  margin: 0.2rem 0;
-  font-size: 1.05rem;
-  line-height: 1.25;
-}
-
-.hud-label {
-  display: block;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 0.55rem;
-  letter-spacing: 0.08em;
-  color: var(--color-warning);
-  margin-bottom: 0.35rem;
+  line-height: 1.4;
 }
 
-.hud-region strong {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  display: block;
-  margin-bottom: 0.3rem;
-}
-
-.hud-note {
-  font-size: 1rem;
-  color: #bcd7dd;
+.world-topbar strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hud-ok {
@@ -599,128 +589,6 @@
 
 .hud-notice {
   color: var(--color-warning);
-}
-
-.hud-btn {
-  margin-top: 0;
-  align-self: center;
-  flex: 0 0 auto;
-}
-
-.travel-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-}
-
-.travel-chip {
-  padding: 0.4rem 0.6rem;
-  font-family: var(--font-display);
-  font-size: 0.52rem;
-  line-height: 1.5;
-  color: var(--color-text);
-  background: #24425a;
-  border: 2px solid #5b87a3;
-  cursor: pointer;
-}
-
-.travel-chip:hover {
-  border-color: var(--color-warning);
-}
-
-.travel-chip.active {
-  background: var(--color-warning);
-  color: #14202c;
-  border-color: #fff4d6;
-}
-
-.hud-progress strong {
-  color: var(--color-warning);
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-}
-
-/* Cruceta en pantalla */
-.touch-pad {
-  flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 42px);
-  grid-template-rows: repeat(3, 42px);
-  gap: 3px;
-  padding: 0.5rem;
-}
-
-.pad-btn {
-  background: #2c4c63;
-  border: 2px solid #6c9bb5;
-  color: var(--color-text);
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-.pad-btn:hover:not(:disabled) {
-  background: #3a6683;
-}
-
-.pad-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pad-up { grid-area: 1 / 2; }
-.pad-left { grid-area: 2 / 1; }
-.pad-right { grid-area: 2 / 3; }
-.pad-down { grid-area: 3 / 2; }
-
-/* Rutas manuales: secundarias, plegadas por defecto */
-.zone-details {
-  margin-top: 1rem;
-  border-top: 2px solid #2f4a5c;
-  padding-top: 0.75rem;
-}
-
-.zone-details summary {
-  font-family: var(--font-display);
-  font-size: 0.58rem;
-  color: #9ec6c9;
-  cursor: pointer;
-}
-
-.zone-chip {
-  display: block;
-  padding: 0.5rem 0.7rem;
-  background: #16293a;
-  border: 2px solid #33546b;
-  color: var(--color-text);
-  text-decoration: none;
-  font-size: 1rem;
-}
-
-.zone-chip span {
-  display: block;
-  font-size: 0.95rem;
-  color: #9ec6c9;
-}
-
-.zone-chip:hover {
-  border-color: var(--color-warning);
-}
-
-@media (max-width: 720px) {
-  .world-hud {
-    flex-direction: column;
-  }
-
-  /* En columna, `flex: 1` estiraba todos los paneles a la misma altura
-     y dejaba huecos enormes. */
-  .hud-panel {
-    flex: 0 0 auto;
-  }
-
-  .touch-pad {
-    align-self: center;
-  }
 }
 
 /* Variación posicional del suelo: sin esto todos los tiles de pasto son

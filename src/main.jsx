@@ -13,6 +13,7 @@ import './styles/global.css'
 import './styles/animations.css'
 import './styles/world.css'
 import './styles/battle.css'
+import './styles/console.css'
 
 initUiSelectSound()
 startMusicOnFirstGesture()

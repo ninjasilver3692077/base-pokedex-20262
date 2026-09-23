@@ -2,27 +2,22 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useGame } from '../context/GameContext.jsx'
 import { GAME_ACTIONS } from '../context/gameReducer.js'
 import { resolveStep } from '../game/movement.js'
+import { useRawInputAction } from '../input/InputProvider.jsx'
+import { INPUT_ACTIONS } from '../input/inputActions.js'
 
 const STEP_INTERVAL_MS = 150
 
-const KEY_DIRECTIONS = {
-  ArrowUp: 'up',
-  KeyW: 'up',
-  ArrowDown: 'down',
-  KeyS: 'down',
-  ArrowLeft: 'left',
-  KeyA: 'left',
-  ArrowRight: 'right',
-  KeyD: 'right',
-}
-
-// Movimiento por pasos discretos (no por frame): mientras haya una tecla
-// de dirección presionada, despacha un MOVE_PLAYER cada
-// STEP_INTERVAL_MS. La posición se lee de un ref (no del estado
-// reactivo) para que los listeners/el intervalo no se reinstalen en cada
-// paso — si dependieran de state.playerPosition, React desmontaría y
-// recrearía el efecto en cada movimiento y el setInterval nunca llegaría
-// a disparar dos veces mientras la tecla sigue apretada.
+// Movimiento por pasos discretos (no por frame): mientras haya una
+// dirección presionada, despacha un MOVE_PLAYER cada STEP_INTERVAL_MS. La
+// posición se lee de un ref (no del estado reactivo) para que el intervalo
+// no se reinstale en cada paso — si dependiera de state.playerPosition,
+// React desmontaría y recrearía el efecto en cada movimiento y el
+// setInterval nunca llegaría a disparar dos veces mientras la dirección
+// sigue apretada.
+//
+// Las direcciones llegan por useRawInputAction (InputProvider): el mismo
+// canal que usa el D-pad en pantalla, así que teclado y D-pad mueven
+// exactamente igual sin dos implementaciones separadas.
 //
 // `onStep(tileType, position)` se invoca en cada paso EFECTIVO (no
 // bloqueado) con el tile pisado: es el enganche del mundo con los
@@ -34,6 +29,7 @@ export function useWorldMovement(map, active, onStep) {
   const heldDirections = useRef([])
   const intervalRef = useRef(null)
   const onStepRef = useRef(onStep)
+  const activeRef = useRef(active)
 
   useEffect(() => {
     positionRef.current = state.playerPosition
@@ -43,9 +39,20 @@ export function useWorldMovement(map, active, onStep) {
     onStepRef.current = onStep
   }, [onStep])
 
-  // Un paso en una dirección. Vive fuera del efecto para poder
-  // exponerlo a los controles táctiles (la cruceta en pantalla), que
-  // deben mover exactamente igual que el teclado.
+  useEffect(() => {
+    activeRef.current = active
+    if (!active) {
+      // Al desactivarse (entrar a batalla, pausar) las direcciones
+      // retenidas se olvidan: al reactivarse no queda un paso "pegado" de
+      // una tecla/botón que ya se soltó mientras estaba inactivo.
+      heldDirections.current = []
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [active])
+
   const step = useCallback(
     (direction) => {
       if (!direction) return
@@ -67,58 +74,43 @@ export function useWorldMovement(map, active, onStep) {
     [map, dispatch],
   )
 
-  useEffect(() => {
-    if (!active) return undefined
+  const stepHeld = useCallback(() => {
+    step(heldDirections.current[0])
+  }, [step])
 
-    function stepHeld() {
-      step(heldDirections.current[0])
+  function holdDirection(direction) {
+    if (!activeRef.current) return
+    if (!heldDirections.current.includes(direction)) {
+      heldDirections.current = [direction, ...heldDirections.current]
     }
-
-    function handleKeyDown(event) {
-      const direction = KEY_DIRECTIONS[event.code]
-      if (!direction) return
-      // Solo se secuestran las flechas/WASD, y solo cuando el foco no
-      // está en un control de texto (buscador de la Pokédex, etc.).
-      const tag = event.target?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      event.preventDefault()
-
-      if (!heldDirections.current.includes(direction)) {
-        heldDirections.current = [direction, ...heldDirections.current]
-      }
-      if (!intervalRef.current) {
-        stepHeld()
-        intervalRef.current = setInterval(stepHeld, STEP_INTERVAL_MS)
-      }
+    if (!intervalRef.current) {
+      stepHeld()
+      intervalRef.current = setInterval(stepHeld, STEP_INTERVAL_MS)
     }
+  }
 
-    function handleKeyUp(event) {
-      const direction = KEY_DIRECTIONS[event.code]
-      if (!direction) return
-
-      heldDirections.current = heldDirections.current.filter((held) => held !== direction)
-      if (heldDirections.current.length === 0 && intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
+  function releaseDirection(direction) {
+    heldDirections.current = heldDirections.current.filter((held) => held !== direction)
+    if (heldDirections.current.length === 0 && intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
     }
+  }
 
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-      // Al desactivarse (entrar a batalla/abrir un overlay) las teclas
-      // retenidas se olvidan: al volver al mundo no queda un paso
-      // "pegado" de una tecla que ya se soltó fuera del listener.
-      heldDirections.current = []
-    }
-  }, [active, step])
-
-  return step
+  useRawInputAction(INPUT_ACTIONS.MOVE_UP, {
+    onPress: () => holdDirection('up'),
+    onRelease: () => releaseDirection('up'),
+  })
+  useRawInputAction(INPUT_ACTIONS.MOVE_DOWN, {
+    onPress: () => holdDirection('down'),
+    onRelease: () => releaseDirection('down'),
+  })
+  useRawInputAction(INPUT_ACTIONS.MOVE_LEFT, {
+    onPress: () => holdDirection('left'),
+    onRelease: () => releaseDirection('left'),
+  })
+  useRawInputAction(INPUT_ACTIONS.MOVE_RIGHT, {
+    onPress: () => holdDirection('right'),
+    onRelease: () => releaseDirection('right'),
+  })
 }

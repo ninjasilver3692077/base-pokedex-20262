@@ -3,15 +3,24 @@
    arriba-izquierda, jugador abajo-derecha); y abajo una consola partida
    en caja de diálogo + menú de acciones. Nada de tarjetas apiladas. */
 
+/* La batalla llena la pantalla de la consola: arena flexible arriba y
+   caja de diálogo fija abajo, sin scroll. */
 .battle-screen {
-  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.25rem, 1vh, 0.6rem);
+  height: 100%;
+  padding: clamp(0.3rem, 1.2vh, 0.6rem);
+  overflow: hidden;
 }
 
+/* min-height garantiza que el arena no se quede sin sitio cuando la caja
+   de diálogo crece (pantallas estrechas, textos largos). */
 .battle-arena {
   position: relative;
+  flex: 1 1 auto;
+  min-height: 48%;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 60vh;
   overflow: hidden;
   border: 4px solid #17242e;
   box-shadow: inset 0 0 0 3px #2f4a5c, 0 8px 0 rgba(0, 0, 0, 0.35);
@@ -42,18 +51,21 @@
   justify-content: center;
 }
 
+/* Proporcional al arena (antes px fijos pensados para una página ancha):
+   dentro de la pantalla de la consola los sprites se solapaban con las
+   cajas de datos. */
 .slot-enemy {
-  right: 8%;
-  top: 12%;
-  width: 190px;
-  height: 190px;
+  right: 6%;
+  top: 8%;
+  width: 26%;
+  height: 46%;
 }
 
 .slot-player {
-  left: 8%;
-  bottom: 4%;
-  width: 230px;
-  height: 230px;
+  left: 6%;
+  bottom: 6%;
+  width: 30%;
+  height: 52%;
 }
 
 .battle-platform {
@@ -67,13 +79,13 @@
 }
 
 .platform-enemy {
-  width: 170px;
-  height: 46px;
+  width: 92%;
+  height: 26%;
 }
 
 .platform-player {
-  width: 210px;
-  height: 56px;
+  width: 96%;
+  height: 26%;
 }
 
 .battle-sprite {
@@ -82,18 +94,19 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  width: 100%;
   height: 100%;
-  margin-bottom: -34px;
+  margin-bottom: -8%;
 }
 
-.slot-enemy .battle-sprite img {
-  width: 150px;
-  height: 150px;
-}
-
-.slot-player .battle-sprite img {
-  width: 190px;
-  height: 190px;
+/* height:100% (no max-height) para que el sprite de 96px SUBA hasta
+   llenar la plataforma en vez de quedarse diminuto en pantallas grandes. */
+.battle-sprite img {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 /* Silueta de respaldo cuando todavía no hay starter elegido: el hueco
@@ -108,8 +121,8 @@
 .battle-info {
   position: absolute;
   z-index: 3;
-  min-width: 250px;
-  padding: 0.55rem 0.8rem 0.5rem;
+  width: clamp(150px, 34%, 260px);
+  padding: 0.4rem 0.7rem 0.35rem;
   background: #f4f1e0;
   color: #1b2a33;
   border: 3px solid #2b4150;
@@ -132,7 +145,7 @@
 
 .battle-info-name {
   margin: 0 0 0.3rem;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 0.6rem;
   line-height: 1.5;
   text-transform: capitalize;
@@ -145,7 +158,7 @@
 }
 
 .hp-tag {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 0.5rem;
   color: #c9820f;
 }
@@ -178,20 +191,17 @@
 }
 
 .battle-console {
-  display: grid;
-  grid-template-columns: 1fr minmax(260px, 340px);
-  gap: 0.75rem;
-  margin-top: 0.75rem;
+  flex: 0 0 auto;
 }
 
 .dialogue-box {
-  padding: 1rem 1.1rem;
+  padding: clamp(0.4rem, 1.6vh, 0.9rem) 0.9rem;
   background: #f4f1e0;
   color: #1b2a33;
   border: 4px solid #2b4150;
   box-shadow: inset 0 0 0 3px #d8d2b6, 0 6px 0 rgba(0, 0, 0, 0.3);
-  font-size: 1.35rem;
-  line-height: 1.35;
+  font-size: clamp(0.95rem, 2.4vh, 1.35rem);
+  line-height: 1.3;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -207,102 +217,9 @@
   font-weight: bold;
 }
 
-.battle-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-.action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  min-height: 58px;
-  padding: 0.6rem 0.5rem;
-  background: #f4f1e0;
-  color: #1b2a33;
-  text-decoration: none;
-  border: 4px solid #2b4150;
-  box-shadow: inset 0 0 0 3px #d8d2b6, 0 5px 0 rgba(0, 0, 0, 0.3);
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  line-height: 1.5;
-  cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
-}
-
-.action-btn:hover:not(:disabled) {
-  background: #fffce8;
-  color: #b3300f;
-}
-
-.action-btn:active:not(:disabled) {
-  transform: translateY(4px);
-  box-shadow: inset 0 0 0 3px #d8d2b6;
-}
-
-.action-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.action-primary {
-  background: #e3350d;
-  color: #fff4d6;
-  box-shadow: inset 0 0 0 3px #ff8a63, 0 5px 0 rgba(0, 0, 0, 0.35);
-}
-
-.action-primary:hover {
-  background: #ff4a1d;
-  color: #fff;
-}
-
-.action-hint {
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  opacity: 0.8;
-}
-
-/* Tecla impresa sobre el botón, como la serigrafía de un mando: el
-   combate se juega con el teclado y la correspondencia debe verse sin
-   tener que leer la ayuda de abajo. */
-.action-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  padding: 0.1rem 0.25rem;
-  background: #2b4150;
-  color: #fff4d6;
-  font-size: 0.5rem;
-  line-height: 1.4;
-}
-
-.action-btn:disabled .action-key {
-  background: #6b7a85;
-}
-
-.keys-hint {
-  margin: 0.55rem 0 0;
-  font-family: var(--font-display);
-  font-size: 0.5rem;
-  line-height: 1.7;
-  text-align: center;
-  color: #9db4c4;
-}
-
-.battle-log {
-  list-style: none;
-  padding: 0.6rem 0.9rem;
-  margin: 0.75rem 0 0;
-  background: #102536;
-  border: 2px solid #45657a;
-  font-size: 1.05rem;
-  color: #cfe3e8;
-  min-height: 2.5rem;
-}
+/* Los comandos de combate los anuncia la ContextControlBar (ver
+   .context-controls[data-context='BATTLE'] en console.css): esta pantalla
+   ya no dibuja etiquetas propias. */
 
 .pokeball-icon {
   position: absolute;
@@ -337,20 +254,16 @@
 }
 
 @media (max-width: 760px) {
-  .battle-console {
-    grid-template-columns: 1fr;
+  .battle-info {
+    width: 44%;
+    font-size: 0.85rem;
   }
 
-  .battle-info {
-    min-width: 0;
-    width: 46%;
+  .battle-info-name {
+    font-size: 0.5rem;
+  }
+
+  .hp-numbers {
     font-size: 0.9rem;
   }
-
-  .slot-enemy { width: 130px; height: 130px; right: 5%; }
-  .slot-player { width: 150px; height: 150px; left: 5%; }
-  .slot-enemy .battle-sprite img { width: 100px; height: 100px; }
-  .slot-player .battle-sprite img { width: 120px; height: 120px; }
-  .platform-enemy { width: 116px; height: 32px; }
-  .platform-player { width: 140px; height: 38px; }
 }

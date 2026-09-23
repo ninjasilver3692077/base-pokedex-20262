@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useGame } from '../../context/GameContext.jsx'
 import { usePokemon } from '../../hooks/usePokemon.js'
 import { useSpecies } from '../../hooks/useSpecies.js'
@@ -8,6 +8,9 @@ import { GAME_ACTIONS } from '../../context/gameReducer.js'
 import { capitalize } from '../../utils/text.js'
 import PokeballIcon from '../../components/battle/PokeballIcon.jsx'
 import { playSound } from '../../audio/sounds.js'
+import { useConsoleActions } from '../../input/InputProvider.jsx'
+import { INPUT_ACTIONS } from '../../input/inputActions.js'
+import { useUiState } from '../../context/UiStateContext.jsx'
 
 const OUTCOME_MESSAGES = {
   enemyFainted: 'El Pokémon salvaje se debilitó por completo y ya no se puede capturar.',
@@ -16,20 +19,11 @@ const OUTCOME_MESSAGES = {
   captured: '¡Quedó registrado como capturado en tu Pokédex!',
 }
 
-// El combate se juega con el teclado: cada acción responde a su número y a
-// la inicial de su nombre. `key` es solo la etiqueta que se dibuja en el
-// botón; `codes` son los event.code que la disparan.
-const ACTIONS = [
-  { action: 'attack', label: 'Atacar', key: '1', codes: ['Digit1', 'Numpad1', 'KeyA'] },
-  { action: 'special', label: 'Especial', key: '2', codes: ['Digit2', 'Numpad2', 'KeyE'] },
-  { action: 'pokeball', label: 'Pokéball', key: '3', codes: ['Digit3', 'Numpad3', 'KeyP'] },
-  { action: 'run', label: 'Huir', key: '4', codes: ['Digit4', 'Numpad4', 'KeyH'] },
-]
-
-const ACTION_BY_CODE = Object.fromEntries(
-  ACTIONS.flatMap(({ action, codes }) => codes.map((code) => [code, action])),
-)
-
+// Las cuatro acciones de combate se disparan por los botones físicos 1-4
+// de la consola (o Digit1-4 del teclado, vía InputProvider). Qué hace cada
+// uno lo anuncia la ContextControlBar, que lee las hints declaradas abajo
+// en useConsoleActions: esta pantalla no dibuja botones ni etiquetas
+// propias.
 const ACTION_SOUNDS = {
   attack: 'attack',
   special: 'hardAttack',
@@ -61,6 +55,7 @@ function InfoBox({ name, current, max, side }) {
 function Battle() {
   const { state: gameState, dispatch } = useGame()
   const navigate = useNavigate()
+  const { setPokedexOpen } = useUiState()
   const enemyId = gameState.selectedPokemonId
   const { status, pokemon: enemyPokemon, error } = usePokemon(enemyId)
   const { status: speciesStatus, species } = useSpecies(enemyId)
@@ -119,38 +114,46 @@ function Battle() {
     [battle, speciesStatus, enemyPokemon, species],
   )
 
-  // Controles de teclado del combate. Mientras no haya desenlace, las
-  // teclas de acción juegan el turno; una vez terminado, Enter es la
-  // salida al mundo (misma acción que el botón).
-  useEffect(() => {
-    function handleKeyDown(event) {
-      const tag = event.target?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || event.repeat) return
+  const finished = Boolean(battle?.outcome)
 
-      if (battle?.outcome) {
-        if (event.code === 'Enter' || event.code === 'NumpadEnter') {
-          event.preventDefault()
-          returnToWorld()
+  useConsoleActions(
+    finished
+      ? {
+          [INPUT_ACTIONS.ACTION_1]: returnToWorld,
+          [INPUT_ACTIONS.ACTION_2]: () => setPokedexOpen(true),
         }
-        return
-      }
-
-      const action = ACTION_BY_CODE[event.code]
-      if (!action) return
-      event.preventDefault()
-      handleAction(action)
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [battle?.outcome, handleAction, returnToWorld])
+      : {
+          [INPUT_ACTIONS.ACTION_1]: () => handleAction('attack'),
+          [INPUT_ACTIONS.ACTION_2]: () => handleAction('special'),
+          [INPUT_ACTIONS.ACTION_3]: () => {
+            if (speciesStatus === 'ready') handleAction('pokeball')
+          },
+          [INPUT_ACTIONS.ACTION_4]: () => handleAction('run'),
+        },
+    {
+      context: 'BATTLE',
+      hints: finished
+        ? [
+            { keys: '1', label: 'VOLVER AL MUNDO' },
+            { keys: '2', label: 'POKÉDEX' },
+          ]
+        : [
+            { keys: '1', label: 'ATACAR' },
+            { keys: '2', label: 'ESPECIAL' },
+            { keys: '3', label: speciesStatus === 'ready' ? 'POKÉBALL' : 'POKÉBALL…' },
+            { keys: '4', label: 'HUIR' },
+          ],
+    },
+  )
 
   if (enemyId == null) {
     return (
       <section className="screen">
         <h1>Sin combate activo</h1>
         <p>Camina por la hierba alta del mundo para encontrar un Pokémon salvaje.</p>
-        <Link className="btn" to="/map">Ir al mundo</Link>
+        <button className="btn" type="button" onClick={() => navigate('/map')}>
+          Ir al mundo
+        </button>
       </section>
     )
   }
@@ -160,7 +163,9 @@ function Battle() {
       <section className="screen">
         <h1>Error</h1>
         <p>No se pudo cargar al Pokémon rival desde PokéAPI. {error?.message}</p>
-        <button className="btn" type="button" onClick={returnToWorld}>Volver al mundo</button>
+        <button className="btn" type="button" onClick={returnToWorld}>
+          Volver al mundo
+        </button>
       </section>
     )
   }
@@ -198,89 +203,28 @@ function Battle() {
             )}
           </div>
           {(effects.enemyClass === 'capture-fail-bounce' || effects.enemyClass === 'capture-success') && (
-            <PokeballIcon
-              key={`ball-${effects.tick}`}
-              result={effects.enemyClass === 'capture-success' ? 'success' : 'fail'}
-            />
+            <PokeballIcon key={`ball-${effects.tick}`} result={effects.enemyClass === 'capture-success' ? 'success' : 'fail'} />
           )}
         </div>
 
         <div className="battle-slot slot-player">
           <span className="battle-platform platform-player" aria-hidden="true" />
           <div key={`p-${effects.tick}`} className={`battle-sprite ${effects.playerClass}`}>
-            {playerSprite ? (
-              <img className="sprite-idle" src={playerSprite} alt={playerName} />
-            ) : (
-              <span className="trainer-stand" aria-hidden="true" />
-            )}
+            {playerSprite ? <img className="sprite-idle" src={playerSprite} alt={playerName} /> : <span className="trainer-stand" aria-hidden="true" />}
           </div>
         </div>
 
-        <InfoBox
-          name={`${capitalize(enemyPokemon.name)} salvaje`}
-          current={battle.enemyHp}
-          max={battle.enemyMaxHp}
-          side="enemy"
-        />
+        <InfoBox name={`${capitalize(enemyPokemon.name)} salvaje`} current={battle.enemyHp} max={battle.enemyMaxHp} side="enemy" />
         <InfoBox name={playerName} current={battle.playerHp} max={battle.playerMaxHp} side="player" />
       </div>
 
       <div className="battle-console">
         <div className="dialogue-box" role="status" aria-live="polite">
           <p>{message}</p>
-          {battle.outcome === 'captured' && (
-            <p className="dialogue-highlight">¡Atrapaste a {capitalize(enemyPokemon.name)}!</p>
-          )}
+          {battle.outcome === 'captured' && <p className="dialogue-highlight">¡Atrapaste a {capitalize(enemyPokemon.name)}!</p>}
         </div>
 
-        {!battle.outcome ? (
-          <div className="battle-actions" role="group" aria-label="Acciones de combate" data-sfx="off">
-            {ACTIONS.map(({ action, label, key }) => (
-              <button
-                key={action}
-                className="action-btn"
-                type="button"
-                onClick={() => handleAction(action)}
-                disabled={action === 'pokeball' && speciesStatus !== 'ready'}
-                aria-keyshortcuts={key}
-              >
-                <span className="action-key" aria-hidden="true">{key}</span>
-                {label}
-                {action === 'pokeball' && speciesStatus !== 'ready' && (
-                  <span className="action-hint">cargando…</span>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="battle-actions battle-outcome">
-            <button
-              className="action-btn action-primary"
-              type="button"
-              onClick={returnToWorld}
-              aria-keyshortcuts="Enter"
-            >
-              <span className="action-key" aria-hidden="true">↵</span>
-              Volver al mundo
-            </button>
-            <Link className="action-btn" to="/pokedex">Ver Pokédex</Link>
-          </div>
-        )}
-
-        <p className="keys-hint">
-          {battle.outcome
-            ? 'Enter para volver al mundo'
-            : '1 Atacar · 2 Especial · 3 Pokéball · 4 Huir'}
-        </p>
       </div>
-
-      {battle.log.length > 0 && (
-        <ul className="battle-log" aria-label="Historial del combate">
-          {battle.log.slice(-3).map((entry, index) => (
-            <li key={`${index}-${entry}`}>{entry}</li>
-          ))}
-        </ul>
-      )}
     </section>
   )
 }

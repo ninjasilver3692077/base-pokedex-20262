@@ -8,11 +8,13 @@ const BASE_HEIGHT = VIEWPORT_TILES_Y * TILE_SIZE_PX
 const MIN_SCALE = 0.34
 const MAX_SCALE = 1.5
 
-// El viewport siempre se dibuja a su tamaño lógico (840x520) y se
-// escala entero con un transform: así el mundo llena la pantalla en un
-// monitor grande y sigue cabiendo completo en un móvil, sin recalcular
-// tiles ni romper el pixel-art (un solo transform compuesto por GPU).
-function useStageScale(stageRef, reservedHeight) {
+// El viewport siempre se dibuja a su tamaño lógico (840x520) y se escala
+// entero con un transform, midiendo el espacio real que le da su
+// contenedor (antes medía window.innerHeight, que asumía ser el contenido
+// principal de la página entera; ahora vive dentro de la pantalla fija de
+// la consola, así que el contenedor —no la ventana— es la fuente de
+// verdad del espacio disponible).
+function useStageScale(stageRef) {
   const [scale, setScale] = useState(1)
 
   useEffect(() => {
@@ -20,21 +22,15 @@ function useStageScale(stageRef, reservedHeight) {
     if (!stage) return undefined
 
     function update() {
-      const available = stage.clientWidth
-      const availableHeight = window.innerHeight - reservedHeight
-      const next = Math.min(available / BASE_WIDTH, availableHeight / BASE_HEIGHT)
+      const next = Math.min(stage.clientWidth / BASE_WIDTH, stage.clientHeight / BASE_HEIGHT)
       setScale(Math.max(MIN_SCALE, Math.min(MAX_SCALE, next)))
     }
 
     update()
     const observer = new ResizeObserver(update)
     observer.observe(stage)
-    window.addEventListener('resize', update)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', update)
-    }
-  }, [stageRef, reservedHeight])
+    return () => observer.disconnect()
+  }, [stageRef])
 
   return scale
 }
@@ -43,13 +39,13 @@ function useStageScale(stageRef, reservedHeight) {
 // interna vía transform para simular la cámara siguiendo al foco. Nunca
 // anima left/top/width (mismo criterio que la corrección de la barra de
 // HP en Fase 8): un único translate3d por movimiento, compuesto por GPU.
-function GameViewport({ map, focus, direction = 'down', ambience = 'town', reservedHeight = 340, children }) {
+function GameViewport({ map, focus, direction = 'down', ambience = 'town', children }) {
   const camera = useMemo(() => computeCameraOffset(focus, map), [focus, map])
   const stageRef = useRef(null)
-  const scale = useStageScale(stageRef, reservedHeight)
+  const scale = useStageScale(stageRef)
 
   return (
-    <div className="game-stage" ref={stageRef} style={{ height: BASE_HEIGHT * scale }}>
+    <div className="game-stage" ref={stageRef}>
       <div
         className={`game-viewport ambience-${ambience}`}
         style={{

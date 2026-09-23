@@ -1,27 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import GameViewport from '../../components/world/GameViewport.jsx'
-import TouchPad from '../../components/world/TouchPad.jsx'
-import { getMapById, MAPS, STARTING_MAP_ID } from '../../game/maps/index.js'
+import { getMapById, STARTING_MAP_ID } from '../../game/maps/index.js'
 import { useGame } from '../../context/GameContext.jsx'
 import { GAME_ACTIONS } from '../../context/gameReducer.js'
 import { useWorldMovement } from '../../hooks/useWorldMovement.js'
 import { usePokedex } from '../../hooks/usePokedex.js'
+import { useUiState } from '../../context/UiStateContext.jsx'
+import { useConsoleActions } from '../../input/InputProvider.jsx'
+import { INPUT_ACTIONS } from '../../input/inputActions.js'
 import { getZoneById } from '../../game/zones.js'
 import { getCandidateSpecies, pickRandomCandidate, shouldTriggerEncounter } from '../../game/encounters.js'
-import { capitalize } from '../../utils/text.js'
 
 const ENCOUNTER_TRANSITION_MS = 900
 
-// Pantalla principal del juego: el mundo jugable ocupa la pantalla y
-// todo lo demás (HUD, viaje, Pokédex) queda alrededor. El ciclo
-// completo caminar → hierba alta → encuentro → batalla vive acá:
-// useWorldMovement avisa cada paso, shouldTriggerEncounter decide (regla
-// pura), y ENTER_BATTLE congela el mundo guardando dónde estaba el
-// jugador para que EXIT_BATTLE lo devuelva al mismo tile.
+// Pantalla principal del juego: el mundo jugable ocupa la pantalla y todo
+// lo demás (HUD) queda alrededor, sin botones HTML de navegación — Tab
+// abre la Pokédex, el D-pad de la consola mueve, ACTION_1 revisa al
+// compañero. El ciclo completo caminar → hierba alta → encuentro → batalla
+// vive acá: useWorldMovement avisa cada paso, shouldTriggerEncounter
+// decide (regla pura), y ENTER_BATTLE congela el mundo guardando dónde
+// estaba el jugador para que EXIT_BATTLE lo devuelva al mismo tile.
 function WorldMap() {
   const { state, dispatch } = useGame()
   const navigate = useNavigate()
+  const { isPaused, openPokedexAt } = useUiState()
   const { status: pokedexStatus, entries } = usePokedex()
 
   const map = getMapById(state.currentRegionId) ?? getMapById(STARTING_MAP_ID)
@@ -125,42 +128,42 @@ function WorldMap() {
     [map, dispatch, navigate, travelTo],
   )
 
-  const step = useWorldMovement(map, phase === 'world' && state.mode !== 'battle', handleStep)
+  useWorldMovement(map, phase === 'world' && state.mode !== 'battle' && !isPaused, handleStep)
+
+  useConsoleActions(
+    {
+      [INPUT_ACTIONS.ACTION_1]: () => {
+        if (state.starterPokemonId != null) openPokedexAt(state.starterPokemonId)
+      },
+    },
+    {
+      context: 'WORLD',
+      hints: [
+        { keys: 'DPAD', label: 'MOVER' },
+        { keys: '1', label: 'EQUIPO' },
+        { keys: 'TAB', label: 'POKÉDEX' },
+        { keys: 'PAUSE', label: 'MENÚ' },
+      ],
+    },
+  )
 
   const zone = getZoneById(map.encounterZoneId)
   const failed = pokedexStatus === 'error' || zoneStatus === 'error'
   const ready = pokedexStatus === 'ready' && zoneStatus === 'ready'
 
+  const statusText = notice ?? (failed ? 'Sin datos de PokéAPI' : ready ? (zone ? `Tipo ${zone.types.join(', ')}` : 'Zona segura') : 'Cargando...')
+  const statusClass = notice ? 'hud-notice' : ready ? 'hud-ok' : failed ? 'hud-error' : 'hud-pending'
+
   return (
     <section className="screen world-screen">
-      <div className="world-hud world-hud-top">
-        <div className="hud-panel hud-region">
-          <span className="hud-label">Región</span>
-          <strong>{map.name}</strong>
-          <span className="hud-note">
-            {zone ? `Pokémon de tipo ${zone.types.join(', ')}` : 'Zona segura'}
-          </span>
-        </div>
-        <div className="hud-panel hud-help">
-          <span className="hud-label">Controles</span>
-          <p>Flechas o WASD para caminar. La hierba alta esconde Pokémon salvajes.</p>
-          <p className={ready ? 'hud-ok' : failed ? 'hud-error' : 'hud-pending'} role="status">
-            {failed
-              ? 'Sin datos de PokéAPI: el mundo es explorable, pero no habrá encuentros.'
-              : ready
-                ? 'Zona cargada'
-                : 'Cargando fauna de la zona...'}
-          </p>
-        </div>
-        <Link to="/pokedex" className="btn hud-btn">Pokédex</Link>
+      <div className="world-topbar">
+        <strong>{map.name}</strong>
+        <span className={statusClass} role="status">
+          {statusText}
+        </span>
       </div>
 
-      <GameViewport
-        map={map}
-        focus={isPositioned ? state.playerPosition : map.spawn}
-        direction={state.playerDirection}
-        ambience={map.ambience}
-      >
+      <GameViewport map={map} focus={isPositioned ? state.playerPosition : map.spawn} direction={state.playerDirection} ambience={map.ambience}>
         {phase === 'encounter' && (
           <div className="encounter-transition" role="status">
             <span>¡Un Pokémon salvaje apareció!</span>
@@ -168,56 +171,6 @@ function WorldMap() {
         )}
         {phase === 'travel' && <div className="travel-fade" aria-hidden="true" />}
       </GameViewport>
-
-      <div className="world-hud world-hud-bottom">
-        <TouchPad onStep={step} disabled={phase !== 'world'} />
-        <div className="hud-panel hud-travel">
-          <span className="hud-label">Viaje</span>
-          <p className="hud-note">Camina hasta una salida del mapa o viaja directo:</p>
-          <div className="travel-grid">
-            {MAPS.map((entry) => (
-              <button
-                key={entry.id}
-                type="button"
-                className={entry.id === map.id ? 'travel-chip active' : 'travel-chip'}
-                onClick={() => travelTo(entry.id)}
-                aria-current={entry.id === map.id ? 'true' : undefined}
-              >
-                {entry.name}
-              </button>
-            ))}
-          </div>
-          {notice && <p className="hud-notice" role="status">{notice}</p>}
-        </div>
-        <div className="hud-panel hud-progress">
-          <span className="hud-label">Expedición</span>
-          <p>
-            <strong>{state.capturedPokemonIds.length}</strong> capturados
-          </p>
-          <p>
-            <strong>{state.discoveredPokemonIds.length}</strong> descubiertos
-          </p>
-          {state.starterPokemonId ? (
-            <Link className="text-link" to={`/pokedex/${state.starterPokemonId}`}>
-              Ver a tu compañero
-            </Link>
-          ) : (
-            <Link className="text-link" to="/starter">Elegir compañero</Link>
-          )}
-        </div>
-      </div>
-
-      <details className="zone-details">
-        <summary>Rutas de exploración manual</summary>
-        <div className="zone-grid">
-          {MAPS.filter((entry) => entry.id !== STARTING_MAP_ID).map((entry) => (
-            <Link key={entry.id} to={`/explore/${entry.encounterZoneId}`} className="zone-chip">
-              {entry.name}
-              <span>{capitalize(getZoneById(entry.encounterZoneId)?.description ?? '')}</span>
-            </Link>
-          ))}
-        </div>
-      </details>
     </section>
   )
 }

@@ -104,9 +104,10 @@ export function startMusicOnFirstGesture() {
 // con data-sfx="off" y quedan fuera.
 export function initUiSelectSound() {
   document.addEventListener('click', (event) => {
-    const control = event.target.closest(
-      'button, a.btn, a.action-btn, .nav-link, .filter-btn, .starter-card, .zone-card, .pokedex-card',
-    )
+    // `button` ya cubre filter-btn/starter-row/menu-option/pokedex-card-btn/
+    // los botones de la consola (todos son <button>); solo hace falta listar
+    // los <a> que no lo son.
+    const control = event.target.closest('button, a.btn')
     if (!control || control.disabled) return
     if (control.closest('[data-sfx="off"]')) return
     playSound('select')

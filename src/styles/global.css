@@ -1,19 +1,60 @@
 * {
   box-sizing: border-box;
 }
+/* La app ocupa exactamente el viewport y nunca genera scroll de página:
+   la consola se centra dentro. dvh (no vh) para que la barra dinámica de
+   los navegadores móviles no recorte los controles inferiores. */
+html {
+  height: 100%;
+}
 body {
   margin: 0;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   font-family: var(--font-body);
   font-size: 1.2rem;
   background: radial-gradient(circle at 50% -20%, #234866, var(--color-bg) 55%);
   color: var(--color-text);
+}
+
+/* Scrollbar propia del juego: si alguna vista necesita desplazarse, el
+   contenido sigue siendo accesible, pero sin la barra blanca del
+   navegador que rompía la ilusión de consola. */
+.screen,
+.pokedex-overlay-inner,
+.detail-pane {
+  scrollbar-width: thin;
+  scrollbar-color: #4d7690 transparent;
+}
+
+.screen::-webkit-scrollbar,
+.pokedex-overlay-inner::-webkit-scrollbar,
+.detail-pane::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.screen::-webkit-scrollbar-track,
+.pokedex-overlay-inner::-webkit-scrollbar-track,
+.detail-pane::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.screen::-webkit-scrollbar-thumb,
+.pokedex-overlay-inner::-webkit-scrollbar-thumb,
+.detail-pane::-webkit-scrollbar-thumb {
+  background: #4d7690;
+  border-radius: 0;
 }
 img {
   image-rendering: pixelated;
 }
 h1,
 h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   line-height: 1.6;
 }
 h1 {
@@ -24,32 +65,13 @@ h2 {
   font-size: 0.8rem;
   margin: 0 0 0.5rem;
 }
-.nav-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: #0b1724;
-  border-bottom: var(--panel-border-width) solid var(--color-border);
-}
-.nav-link {
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  color: var(--color-text);
-  text-decoration: none;
-  padding: 0.4rem 0.5rem;
-  border-radius: var(--panel-radius);
-}
-.nav-link.active {
-  background: var(--color-accent);
-  color: #fff;
-}
-.app-main {
-  padding: 1.5rem;
-}
+/* Cada pantalla llena la caja fija de ConsoleScreen y hace scroll interno
+   si su contenido no cabe, en vez de asumir que es el body entero de una
+   página web (criterio anterior: max-width + margin:auto). */
 .screen {
-  max-width: 640px;
-  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
   animation: screen-fade-in 0.25s ease-out;
 }
 .btn {
@@ -59,7 +81,7 @@ h2 {
   background: #f5c451;
   color: #182536;
   text-decoration: none;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 0.65rem;
   border: var(--panel-border-width) solid var(--color-accent);
   border-radius: var(--panel-radius);
@@ -77,32 +99,200 @@ h2 {
   box-shadow: none;
   transform: none;
 }
-.btn:focus-visible, .nav-link:focus-visible, .filter-btn:focus-visible, .starter-card:focus-visible, .zone-card:focus-visible, input:focus-visible { outline: 3px solid #f5c451; outline-offset: 3px; }
+.btn:focus-visible,
+.filter-btn:focus-visible,
+.starter-row:focus-visible,
+.menu-option:focus-visible,
+.pokedex-card-btn:focus-visible,
+input:focus-visible {
+  outline: 3px solid #f5c451;
+  outline-offset: 3px;
+}
 .btn-primary { background: var(--color-accent); color: #fff; border-color: #ffb15c; }
-.eyebrow { color: #f5c451; font-family: var(--font-display); font-size: .58rem; letter-spacing: .12em; }
+.eyebrow { color: #f5c451; font-family: var(--font-ui); font-size: .58rem; letter-spacing: .12em; }
 .screen-lead { color: #c8d8dd; max-width: 48ch; }
-.home-screen { min-height: calc(100vh - 62px); position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(280px, 42%) 1fr; align-items: center; padding: clamp(2rem, 7vw, 7rem); background: linear-gradient(135deg, #142f3f, #1c4e50 60%, #285a43); }
-.home-copy { position: relative; z-index: 2; }
-.home-copy h1 { font-size: clamp(2rem, 6vw, 4.6rem); line-height: 1.1; text-shadow: 5px 5px #102335; margin: .5rem 0 1.5rem; }
-.home-copy h1 span { color: #f5c451; }
-.home-tagline { color: #d9eee1; font-size: 1.45rem; line-height: 1.05; }
-.home-secondary { display: block; color: #fff4d6; font-size: 1.1rem; margin-top: 1.4rem; text-decoration: none; }
-.home-secondary:hover { color: #f5c451; }
-.home-reset { display: block; margin-top: .6rem; padding: 0; background: none; border: none; color: #d98a7a; font-family: var(--font-body); font-size: 1rem; text-decoration: underline; cursor: pointer; }
-.home-reset:hover { color: #f5694f; }
-.home-reset:focus-visible { outline: 3px solid #f5c451; outline-offset: 3px; }
-.home-landscape { position: absolute; inset: 0 0 0 28%; overflow: hidden; }
-.sun { position: absolute; width: 18vw; height: 18vw; min-width: 150px; min-height: 150px; border-radius: 50%; background: #f5c451; opacity: .8; top: 10%; right: 15%; box-shadow: 0 0 80px #f5c451; }
-.mountain { position: absolute; bottom: 22%; width: 70%; height: 65%; clip-path: polygon(0 100%, 23% 28%, 38% 55%, 56% 5%, 78% 55%, 100% 18%, 100% 100%); }
-.mountain-back { right: -8%; background: #254c58; opacity: .8; }
-.mountain-front { left: 6%; background: #193b47; bottom: 15%; }
-.home-path { position: absolute; bottom: -22%; left: 36%; width: 30%; height: 80%; background: #ba8050; transform: rotate(10deg); border-left: 10px solid #d9a369; border-right: 10px solid #d9a369; }
-.home-tree { position: absolute; bottom: 15%; width: 70px; height: 130px; background: #1e633f; border-radius: 45% 45% 22% 22%; box-shadow: inset 18px -8px #2f8850; }
-.home-tree::after { content: ''; position: absolute; width: 18px; height: 44px; background: #754a35; bottom: -30px; left: 26px; }
-.tree-one { left: 20%; }
-.tree-two { right: 7%; bottom: 24%; transform: scale(1.3); }
-.text-link {
+
+/* Menú navegable con D-pad + Botón 1: título, pausa y los sub-paneles de
+   confirmación comparten este mismo lenguaje visual. */
+.overlay-menu {
+  list-style: none;
+  margin: 1.5rem 0;
+  padding: 0;
+}
+.menu-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.2rem;
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: clamp(0.62rem, 2vh, 0.85rem);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.menu-option.selected {
+  color: var(--color-warning);
+}
+/* El cursor ocupa sitio siempre (visibility, no display) para que la
+   opción no se desplace al seleccionarse. */
+.menu-cursor {
+  flex: 0 0 auto;
+  visibility: hidden;
+  color: var(--color-warning);
+}
+.menu-option.selected .menu-cursor {
+  visibility: visible;
+}
+.confirm-panel {
+  margin-top: 1rem;
+}
+.confirm-options {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Pantalla de título: centrada por flex, sin scroll ni padding en % */
+.title-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+.title-heading {
+  font-weight: 700;
+  font-size: clamp(1rem, 4.6vh, 1.9rem);
+  text-shadow: 4px 4px #102335;
+  margin: 0.4rem 0 0;
+}
+/* "EXPEDITION" no lleva acentos, así que sí puede usar la display font
+   (Press Start 2P); "POKÉMON" se queda en la UI font porque la display
+   dibuja la É a altura de minúscula. */
+.title-heading span {
+  display: block;
+  margin-top: 0.35em;
   font-family: var(--font-display);
+  font-size: 0.82em;
+  color: var(--color-accent);
+}
+.title-menu {
+  display: inline-block;
+  text-align: left;
+  margin: clamp(0.75rem, 3vh, 1.75rem) 0 0;
+}
+
+/* Selección de starter: los tres visibles a la vez, sin scroll. */
+.starter-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(0.5rem, 2.4vh, 1.4rem);
+  overflow: hidden;
+}
+.starter-head {
+  text-align: center;
+}
+.starter-head h1 {
+  margin: 0.3rem 0 0;
+}
+.starter-list {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(0.4rem, 1.6vw, 1rem);
+  width: 100%;
+  min-height: 0;
+  max-height: 60vh;
+}
+.starter-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: clamp(0.4rem, 1.4vh, 0.9rem) 0.4rem;
+  background: linear-gradient(180deg, #1d3245, #142433);
+  border: 3px solid #4d7690;
+  color: var(--color-text);
+  text-align: center;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+}
+.starter-row.selected {
+  border-color: var(--color-warning);
+  background: linear-gradient(180deg, #27455e, #16283a);
+}
+.starter-sprite {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* El sprite de PokéAPI son 96x96: se amplía con escalado entero para que
+   llene la tarjeta sin emborronarse. */
+.starter-sprite img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+  transform: scale(1.5);
+}
+.starter-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.starter-info strong {
+  font-family: var(--font-ui);
+  font-size: clamp(0.55rem, 1.7vh, 0.75rem);
+  margin-bottom: 0.2rem;
+  overflow-wrap: anywhere;
+}
+.starter-info span {
+  font-size: clamp(0.85rem, 2vh, 1rem);
+  color: #bcd7dd;
+}
+/* Cursor de selección: triángulo CSS, no un glifo de fuente. */
+.starter-marker {
+  height: 0.5rem;
+  opacity: 0;
+  color: var(--color-warning);
+  font-size: 0.8rem;
+}
+.starter-marker.active {
+  opacity: 1;
+}
+
+@media (max-width: 420px) {
+  .starter-list {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+  .starter-row {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    text-align: left;
+  }
+  .starter-sprite {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.text-link {
+  font-family: var(--font-ui);
   font-size: 0.6rem;
   line-height: 1.7;
   color: #f5c451;
@@ -111,157 +301,308 @@ h2 {
 .text-link:hover {
   text-decoration: underline;
 }
-.pokedex-updated-banner {
+
+/* Pokédex: cabecera + filtros + rejilla paginada, todo dentro de la
+   pantalla. Sin scroll: se pasa de página con el D-pad. */
+.pokedex-shell {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.3rem, 1.2vh, 0.7rem);
+  height: 100%;
+  padding: clamp(0.4rem, 1.6vh, 0.8rem) clamp(0.45rem, 1.6vw, 0.9rem);
+  overflow: hidden;
+}
+.pokedex-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--color-border);
-  border: var(--panel-border-width) solid var(--color-success);
-  border-radius: var(--panel-radius);
-  animation: pokedex-updated-enter 0.3s ease-out;
+  gap: 0.75rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid #2f4a5c;
 }
-.pokedex-updated-banner strong {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-family: var(--font-display);
-  font-size: 0.55rem;
-  color: var(--color-success);
-  letter-spacing: 0.05em;
-}
-.pokedex-updated-banner p {
+.pokedex-titles h1 {
   margin: 0;
-  font-size: 1.05rem;
-}
-.pokedex-updated-close {
-  background: none;
-  border: none;
-  color: var(--color-text);
-  font-size: 1.2rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.pokedex-screen {
-  max-width: 960px;
+  font-size: clamp(0.62rem, 2vh, 0.9rem);
+  color: var(--color-accent);
 }
 .pokedex-progress {
-  opacity: 0.85;
+  margin: 0.15rem 0 0;
+  font-size: clamp(0.8rem, 1.9vh, 1rem);
+  color: #9ec6c9;
 }
-.pokedex-controls {
+.pokedex-pager {
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 1rem 0;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: clamp(0.55rem, 1.7vh, 0.72rem);
+  color: var(--color-text);
 }
-.pokedex-controls input[type='search'] {
-  padding: 0.5rem;
-  border-radius: var(--panel-radius);
-  border: var(--panel-border-width) solid var(--color-border);
+.pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  min-height: 24px;
+  padding: 0.2rem 0.35rem;
   background: var(--color-panel);
   color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 1.1rem;
+  border: 2px solid var(--color-border);
+  cursor: pointer;
 }
-.pokedex-filters {
+.pager-btn:hover:not(:disabled) {
+  border-color: var(--color-warning);
+}
+.pager-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pokedex-empty {
+  margin: auto;
+  text-align: center;
+  color: #9ec6c9;
+}
+.pokedex-controls {
+  flex: 0 0 auto;
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+.pokedex-controls input[type='search'] {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 0.3rem 0.45rem;
+  border-radius: var(--panel-radius);
+  border: 2px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 2vh, 1.05rem);
+}
+.pokedex-filters {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
 .filter-btn {
-  padding: 0.4rem 0.75rem;
+  padding: 0.3rem 0.5rem;
   background: var(--color-panel);
   color: var(--color-text);
   border: 2px solid var(--color-border);
   border-radius: var(--panel-radius);
   cursor: pointer;
-  font-family: var(--font-display);
-  font-size: 0.55rem;
+  font-family: var(--font-ui);
+  font-size: clamp(0.5rem, 1.5vh, 0.6rem);
+  line-height: 1.4;
 }
 .filter-btn.active {
   background: var(--color-border);
   border-color: var(--color-accent);
 }
+/* Rejilla de página fija: 4x3 que encoge con la pantalla, nunca scroll. */
 .pokedex-grid {
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 0.75rem;
-  margin: 1rem 0;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 1fr;
+  gap: clamp(0.25rem, 1vw, 0.6rem);
 }
+.pokedex-card-btn {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.pokedex-card-btn.focused .pokedex-card {
+  border-color: var(--color-warning);
+  background: #1d3245;
+}
+/* Filas explícitas: el sprite es la única que encoge, así el nombre y el
+   estado nunca se solapan cuando la tarjeta es baja. */
 .pokedex-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
+  justify-items: center;
+  gap: 0.05rem;
+  height: 100%;
+  padding: 0.25rem;
   background: var(--color-panel);
   border: 2px solid var(--color-border);
   border-radius: var(--panel-radius);
-  text-decoration: none;
   color: var(--color-text);
   position: relative;
+  overflow: hidden;
 }
-.pokedex-card.locked {
-  opacity: 1;
+.pokedex-card:hover {
+  border-color: var(--color-warning);
 }
 .pokedex-card.captured {
   border-color: var(--color-accent);
 }
+.pokedex-card.undiscovered {
+  border-color: #416173;
+}
+/* height:100% da una altura definida a la celda para que el max-height
+   del sprite se resuelva: con height:auto el sprite se salía y se
+   superponía al nombre. */
 .pokedex-card-sprite {
-  width: 64px;
-  height: 64px;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .pokedex-card-sprite img {
-  width: 64px;
-  height: 64px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 .pokedex-card-sprite .placeholder {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   opacity: 0.6;
 }
-.pokedex-card-id {
-  font-family: var(--font-display);
-  font-size: 0.55rem;
-  opacity: 0.7;
-}
 .pokedex-card-name {
-  font-size: 1rem;
+  max-width: 100%;
+  font-size: clamp(0.75rem, 1.8vh, 0.95rem);
+  line-height: 1.1;
   text-transform: capitalize;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pokedex-card-status { font-family: var(--font-display); font-size: .4rem; color: #8db4bd; text-align: center; }
-.pokedex-card.undiscovered { border-color: #416173; }
-.pokedex-card.undiscovered .pokedex-card-status { color: #e3b95d; }
-.detail-status { font-family: var(--font-display); font-size: .6rem; letter-spacing: .08em; }
+.pokedex-card-meta {
+  max-width: 100%;
+  font-family: var(--font-ui);
+  font-size: clamp(0.38rem, 1.15vh, 0.46rem);
+  letter-spacing: 0.02em;
+  color: #8db4bd;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pokedex-card.captured .pokedex-card-meta {
+  color: #8fe3a2;
+}
+.pokedex-card.discovered .pokedex-card-meta {
+  color: #7fd4e0;
+}
+.pokedex-card.undiscovered .pokedex-card-meta {
+  color: #e3b95d;
+}
+.detail-status {
+  font-family: var(--font-ui);
+  font-size: clamp(0.45rem, 1.5vh, 0.6rem);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
 .status-undiscovered { color: #e3b95d; }
 .status-discovered { color: #69c4d0; }
 .status-captured { color: #69d58b; }
-.captured-badge {
-  margin-left: 0.5rem;
-  color: var(--color-success);
-  font-size: 0.9rem;
-}
-.pagination {
+/* Ficha de Pokémon: dos columnas para llenar el ancho de la pantalla. */
+.detail-shell {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  font-size: 1rem;
+  flex-direction: column;
+  gap: clamp(0.3rem, 1.2vh, 0.6rem);
+  height: 100%;
+  padding: clamp(0.4rem, 1.6vh, 0.8rem) clamp(0.45rem, 1.6vw, 0.9rem);
+  overflow: hidden;
 }
-.pokemon-details-sprite {
-  width: 160px;
-  height: 160px;
+.detail-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid #2f4a5c;
+}
+.detail-head h1 {
+  margin: 0;
+  font-size: clamp(0.6rem, 2vh, 0.88rem);
+  text-transform: capitalize;
+}
+.detail-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(0.4rem, 1.6vw, 1rem);
+}
+.detail-pane {
+  min-height: 0;
+  min-width: 0;
+}
+.detail-pane-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #101d2b;
+  border: 2px solid #2f4a5c;
+  padding: 0.4rem;
+}
+.detail-pane-right {
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+.detail-pane-right h2 {
+  margin: 0 0 0.3rem;
+  font-size: clamp(0.5rem, 1.6vh, 0.62rem);
+  color: var(--color-warning);
+}
+.detail-sprite {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 1rem 0;
+  width: 100%;
 }
-.pokemon-details-sprite img {
+/* Sprite pixel: escalado entero y sin suavizado. */
+.detail-sprite img {
   max-width: 100%;
   max-height: 100%;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+  transform: scale(1.4);
+  transform-origin: center;
+}
+.detail-meta {
+  display: flex;
+  gap: 1.2rem;
+  margin: 0;
+}
+.detail-meta dt {
+  font-family: var(--font-ui);
+  font-size: clamp(0.42rem, 1.3vh, 0.52rem);
+  color: #9ec6c9;
+}
+.detail-meta dd {
+  margin: 0.1rem 0 0;
+  font-size: clamp(0.85rem, 1.9vh, 1rem);
+}
+.detail-abilities {
+  list-style: none;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  font-size: clamp(0.85rem, 1.9vh, 1rem);
+  text-transform: capitalize;
 }
 .type-badges {
   display: flex;
@@ -270,36 +611,32 @@ h2 {
   margin-bottom: 1rem;
 }
 .type-badge {
-  padding: 0.3rem 0.6rem;
+  padding: 0.2rem 0.45rem;
   border-radius: var(--panel-radius);
   background: var(--color-border);
-  font-family: var(--font-display);
-  font-size: 0.55rem;
-}
-.pokemon-meta {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1rem;
-}
-.pokemon-meta div {
-  display: flex;
-  flex-direction: column;
-}
-.pokemon-meta dt {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  font-family: var(--font-ui);
+  font-size: clamp(0.45rem, 1.4vh, 0.55rem);
 }
 .stat-list {
   list-style: none;
+  margin: 0 0 0.6rem;
   padding: 0;
 }
 .stat-row {
   display: grid;
-  grid-template-columns: 100px 1fr 40px;
+  grid-template-columns: minmax(48px, 5.2em) 1fr 2.2em;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
-  font-size: 0.95rem;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
+  font-size: clamp(0.72rem, 1.7vh, 0.9rem);
+}
+.stat-name {
+  font-family: var(--font-ui);
+  font-size: clamp(0.4rem, 1.25vh, 0.5rem);
+  color: #9ec6c9;
+}
+.stat-value {
+  text-align: right;
 }
 .stat-bar {
   background: var(--color-panel);
@@ -311,224 +648,6 @@ h2 {
 .stat-bar-fill {
   background: var(--color-accent);
   height: 100%;
-}
-@media (max-width: 480px) {
-  body {
-    font-size: 1.05rem;
-  }
-
-  h1 {
-    font-size: 0.85rem;
-  }
-
-  .app-main {
-    padding: 1rem;
-  }
-
-  .btn {
-    font-size: 0.55rem;
-    padding: 0.55rem 0.75rem;
-  }
-}
-.starter-screen { max-width: 900px; padding: 2rem 0; }
-.starter-screen h1 { font-size: clamp(1.2rem, 4vw, 2rem); }
-.starter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0; }
-.starter-card { min-height: 220px; border: 3px solid #38586a; background: linear-gradient(160deg, #1d3b51, #142736); color: var(--color-text); padding: 1rem; cursor: pointer; font-family: var(--font-body); font-size: 1.25rem; }
-.starter-card:hover, .starter-card.selected { border-color: #f5c451; transform: translateY(-4px); box-shadow: 0 7px 0 #0b1724; }
-.starter-card span { display: block; color: #9ec6c9; font-size: 1rem; margin-top: .35rem; }
-.starter-sprite { height: 130px; display:flex; align-items:center; justify-content:center; }
-.starter-sprite img { width: 130px; height: 130px; image-rendering: pixelated; }
-@media (max-width: 640px) { .home-screen { grid-template-columns: 1fr; padding: 2rem 1.2rem; } .home-landscape { inset: 42% 0 0; opacity: .65; } .starter-grid { grid-template-columns: 1fr; } .starter-card { min-height: 150px; display: grid; grid-template-columns: 110px 1fr; text-align: left; align-items: center; } .starter-sprite { grid-row: span 2; height: 110px; } .starter-sprite img { width: 110px; height: 110px; } }
-
-/* ===== Remediación final: HUD de navegación, escena del Home y
-   legibilidad. Todo lo de abajo corrige lo detectado comparando la app
-   real contra references/visual. ===== */
-
-/* La barra superior deja de ser una navbar de web: cartucho oscuro con
-   marcador de Pokéball en el enlace activo y objetivos táctiles grandes. */
-.nav-bar {
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(180deg, #16283a, #0b1724);
-  border-bottom: 4px solid #e3350d;
-  box-shadow: inset 0 -3px 0 #2f4a5c;
-}
-
-.nav-bar::before {
-  content: '';
-  width: 20px;
-  height: 20px;
-  margin-right: 0.6rem;
-  border-radius: 50%;
-  border: 2px solid #0b1724;
-  background: linear-gradient(180deg, #e3350d 0 45%, #0b1724 45% 55%, #fff4d6 55% 100%);
-}
-
-.nav-link {
-  font-size: 0.62rem;
-  line-height: 1.6;
-  padding: 0.55rem 0.7rem;
-  border: 2px solid transparent;
-}
-
-.nav-link:hover {
-  border-color: #5b87a3;
-}
-
-.nav-link.active {
-  background: var(--color-accent);
-  border-color: #ffb15c;
-  box-shadow: 0 3px 0 #7d1c06;
-}
-
-/* Control de sonido al extremo opuesto de la barra: la música en bucle
-   necesita una forma visible de apagarse. */
-.mute-btn {
-  margin-left: auto;
-  min-width: 44px;
-  min-height: 34px;
-  padding: 0.3rem 0.5rem;
-  font-size: 1rem;
-  line-height: 1;
-  color: var(--color-text);
-  background: #16283a;
-  border: 2px solid #2f4a5c;
-  border-radius: var(--panel-radius);
-  cursor: pointer;
-}
-
-.mute-btn:hover {
-  border-color: #5b87a3;
-}
-
-.mute-btn:focus-visible {
-  outline: 3px solid #f5c451;
-  outline-offset: 3px;
-}
-
-/* Escena del Home: el camino sube en perspectiva desde el borde
-   inferior hacia el horizonte, en vez de ser una losa inclinada que
-   tapaba media ilustración. */
-.home-landscape::after {
-  content: '';
-  position: absolute;
-  inset: 62% 0 0 0;
-  background: linear-gradient(180deg, #3f8a4e 0 12%, #2f7442 12% 100%);
-}
-
-.home-path {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 52%;
-  height: 42%;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, #c99a63 0%, #b2814e 100%);
-  border: none;
-  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
-  z-index: 1;
-}
-
-.home-path::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0 6px, transparent 6px 18px);
-}
-
-.home-tree {
-  z-index: 2;
-}
-
-.home-copy .btn {
-  white-space: nowrap;
-}
-
-/* Legibilidad: la pixel font solo en etiquetas cortas y nunca por
-   debajo de 0.5rem; los datos densos van en la fuente de cuerpo. */
-.pokedex-card-status {
-  font-family: var(--font-body);
-  font-size: 0.92rem;
-  letter-spacing: 0.04em;
-  color: #b7d3da;
-}
-
-.pokedex-card.undiscovered .pokedex-card-status {
-  color: #f0c86a;
-}
-
-.pokedex-card.discovered .pokedex-card-status {
-  color: #7fd4e0;
-}
-
-.pokedex-card.captured .pokedex-card-status {
-  color: #8fe3a2;
-}
-
-.pokedex-card {
-  padding: 0.6rem 0.5rem 0.7rem;
-  border-width: 3px;
-}
-
-.pokedex-card:hover {
-  border-color: var(--color-warning);
-}
-
-.detail-status {
-  font-size: 0.62rem;
-  line-height: 1.7;
-}
-
-.filter-btn {
-  font-size: 0.58rem;
-  line-height: 1.6;
-  padding: 0.5rem 0.8rem;
-}
-
-.pokedex-progress {
-  font-size: 1.1rem;
-  color: #cfe3e8;
-}
-
-/* Foco visible en todos los controles nuevos del juego. */
-.travel-chip:focus-visible,
-.pad-btn:focus-visible,
-.action-btn:focus-visible,
-.zone-chip:focus-visible,
-.pokedex-card:focus-visible,
-.text-link:focus-visible,
-summary:focus-visible {
-  outline: 3px solid #f5c451;
-  outline-offset: 3px;
-}
-
-/* Exploración manual (ruta alternativa a caminar por el mundo). */
-.wild-encounter {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: linear-gradient(180deg, #1d3245, #142433);
-  border: 3px solid #4d7690;
-}
-
-.explore-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.zone-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.6rem;
-  margin: 0.75rem 0;
-}
-
-@media (max-width: 640px) {
-  .nav-link {
-    font-size: 0.55rem;
-    padding: 0.5rem;
-  }
 }
 
 /* Press Start 2P no trae flechas: dibujarlas con bordes evita el glifo
@@ -544,27 +663,25 @@ summary:focus-visible {
   border-left: 8px solid currentColor;
 }
 
-/* La Pokédex es un aparato, no un panel de administración: cabecera con
-   lente y luces, y la rejilla dentro de la carcasa. */
-.pokedex-screen {
-  padding: 0 0 1rem;
+@media (max-width: 480px) {
+  body {
+    font-size: 1.05rem;
+  }
+
+  h1 {
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    font-size: 0.55rem;
+    padding: 0.55rem 0.75rem;
+  }
 }
 
-.pokedex-screen::before {
-  content: '';
-  display: block;
-  height: 46px;
-  margin-bottom: 1rem;
-  background: linear-gradient(180deg, #e3350d 0 70%, #a82208 70% 100%);
-  border: 3px solid #17242e;
-  background-image: radial-gradient(circle at 34px 22px, #cfe9ff 0 10px, #7fc4e8 11px 13px, #2b4a63 14px 16px, transparent 17px),
-    radial-gradient(circle at 78px 22px, #f5c451 0 5px, transparent 6px),
-    radial-gradient(circle at 96px 22px, #3cb043 0 5px, transparent 6px),
-    radial-gradient(circle at 114px 22px, #fff4d6 0 5px, transparent 6px),
-    linear-gradient(180deg, #e3350d 0 70%, #a82208 70% 100%);
+.starter-screen {
+  max-width: 900px;
+  padding: 2rem 1rem;
 }
-
-.pokedex-screen > * {
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
+.starter-screen h1 {
+  font-size: clamp(1.2rem, 4vw, 2rem);
 }

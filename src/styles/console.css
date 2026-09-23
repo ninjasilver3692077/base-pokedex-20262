@@ -1,0 +1,429 @@
+/* La consola: carcasa recreada en CSS/HTML (nunca la imagen de referencia
+   como fondo), bordes duros y sombras pixeladas en vez de glassmorphism.
+
+   Reglas de layout (el bug anterior era que los controles se salían por
+   abajo de la carcasa):
+   - La carcasa tiene altura DEFINIDA (min(100%, tope)), nunca max-height
+     con hijos que no pueden encoger.
+   - .console-screen es el único hijo flexible (flex:1 + min-height:0):
+     absorbe el espacio sobrante, así que nunca empuja a los controles.
+   - Los controles miden --control-size, que depende también de dvh: en
+     viewports bajos encogen en vez de desbordar.
+   Ningún transform escala la consola: el pixel-art se escala aparte. */
+
+.console-body {
+  --control-size: clamp(76px, min(29vw, 19dvh), 168px);
+  --shell-gap: clamp(0.4rem, 1.4dvh, 1.1rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--shell-gap);
+  width: min(94vw, 900px);
+  /* dvh, no %: dentro del body flex centrado Chrome trata la altura del
+     contenedor como indefinida y un height:100% colapsaba la pantalla. */
+  height: min(96dvh, 820px);
+  padding: clamp(0.6rem, 2dvh, 1.5rem) clamp(0.8rem, 3vw, 1.8rem) clamp(0.8rem, 2.2dvh, 1.6rem);
+  background: linear-gradient(180deg, #d9d6cd 0%, #b9b6ac 100%);
+  border: 4px solid #55524a;
+  border-radius: 26px 26px 18px 18px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -8px 0 rgba(0, 0, 0, 0.12),
+    0 10px 0 rgba(0, 0, 0, 0.3),
+    0 18px 34px rgba(0, 0, 0, 0.4);
+}
+
+/* Ranura/altavoz decorativo, como el de la referencia. */
+.console-body::before {
+  content: '';
+  flex: 0 0 auto;
+  width: clamp(60px, 16vw, 110px);
+  height: 8px;
+  background: #55524a;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.console-screen {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  background: #4a4d52;
+  border: 6px solid #4a4d52;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 3px #2c2e31, 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Dentro de la pantalla: el juego arriba (flexible) y la barra de
+   controles contextuales abajo (franja estable que nunca tapa el juego). */
+.console-screen-viewport {
+  position: absolute;
+  inset: 10px;
+  display: flex;
+  flex-direction: column;
+  background: #0b0d12;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+.screen-content {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Overlays (Pokédex, Pausa) cubren solo el área de juego: la barra de
+   controles contextuales sigue visible y anuncia sus propias acciones. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: #0b0d12;
+  overflow: hidden;
+}
+
+.pause-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: clamp(0.75rem, 3vh, 1.5rem);
+  color: var(--color-text);
+}
+
+.overlay-title {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: clamp(0.85rem, 2.6vh, 1.15rem);
+  color: var(--color-warning);
+  text-shadow: 3px 3px #000;
+  margin: 0 0 0.5rem;
+}
+
+/* --- Barra de controles contextuales ------------------------------- */
+
+.context-controls {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem clamp(0.5rem, 2vw, 1.1rem);
+  padding: 0.3rem 0.5rem;
+  background: #16222e;
+  border-top: 2px solid #2f4a5c;
+  font-family: var(--font-ui);
+  font-size: clamp(0.5rem, 1.45vh, 0.62rem);
+  line-height: 1.5;
+  color: #9ec6c9;
+}
+
+.context-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  white-space: nowrap;
+}
+
+/* Misma serigrafía que los botones físicos: Press Start 2P para que el
+   2 y el 3 no se lean como 8 y 9. */
+.context-hint-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  padding: 0.25em 0.4em;
+  background: #2f4a5c;
+  color: #fff4d6;
+  border: 1px solid #4d7690;
+  font-family: var(--font-display);
+  font-size: 0.82em;
+}
+
+.context-hint-label {
+  color: #cfe3e8;
+}
+
+/* En combate los cuatro comandos SON la interacción principal: la misma
+   barra centralizada, pero con peso de panel RPG (crema, más grande) en
+   vez de un texto de ayuda discreto. */
+.context-controls[data-context='BATTLE'] {
+  gap: 0.25rem clamp(0.6rem, 2.4vw, 1.6rem);
+  padding: 0.45rem 0.6rem;
+  background: #f4f1e0;
+  border-top: 4px solid #2b4150;
+  box-shadow: inset 0 0 0 3px #d8d2b6;
+  font-size: clamp(0.52rem, 1.6vh, 0.7rem);
+}
+
+.context-controls[data-context='BATTLE'] .context-hint-label {
+  color: #1b2a33;
+}
+
+.context-controls[data-context='BATTLE'] .context-hint-key {
+  background: #2b4150;
+  border-color: #1b2a33;
+}
+
+/* Flechas dibujadas con bordes: los glifos ▲▼◀▶ salen deformados en las
+   fuentes pixel, y así siempre coinciden con el color del texto. */
+.glyph {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+}
+
+.glyph-up {
+  border-left: 0.3em solid transparent;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0.4em solid currentColor;
+}
+
+.glyph-down {
+  border-left: 0.3em solid transparent;
+  border-right: 0.3em solid transparent;
+  border-top: 0.4em solid currentColor;
+}
+
+.glyph-left {
+  border-top: 0.3em solid transparent;
+  border-bottom: 0.3em solid transparent;
+  border-right: 0.4em solid currentColor;
+}
+
+.glyph-right {
+  border-top: 0.3em solid transparent;
+  border-bottom: 0.3em solid transparent;
+  border-left: 0.4em solid currentColor;
+}
+
+/* --- Controles físicos --------------------------------------------- */
+
+.console-controls {
+  flex: 0 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(0.5rem, 3vw, 2rem);
+}
+
+.console-lower {
+  display: flex;
+  gap: 0.6rem;
+  justify-self: center;
+}
+
+.dpad,
+.action-cluster {
+  position: relative;
+  width: var(--control-size);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.action-cluster {
+  justify-self: end;
+}
+
+.dpad-up { grid-area: 1 / 2; }
+.dpad-left { grid-area: 2 / 1; }
+.dpad-right { grid-area: 2 / 3; }
+.dpad-down { grid-area: 3 / 2; }
+.dpad-center {
+  grid-area: 2 / 2;
+  background: #3a3d42;
+  border: 2px solid #202225;
+}
+
+.action-btn-1 { grid-area: 1 / 2; }
+.action-btn-2 { grid-area: 2 / 1; }
+.action-btn-3 { grid-area: 2 / 3; }
+.action-btn-4 { grid-area: 3 / 2; }
+
+/* --- Botón físico base --------------------------------------------
+   default/hover/active(is-pressed)/focus-visible/disabled, con la misma
+   traslación+sombra en los tres variantes para que se sientan
+   presionables (ver FEEDBACK FÍSICO DE LOS BOTONES). */
+
+.console-btn {
+  appearance: none;
+  padding: 0;
+  /* Serigrafía del hardware: solo dígitos y TAB/PAUSE (sin acentos), y
+     Press Start 2P los dibuja sin ambigüedad — en la UI font el 2 y el 3
+     se confunden con 8 y 9 a este tamaño. */
+  font-family: var(--font-display);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.06s steps(2, end), box-shadow 0.06s steps(2, end);
+}
+
+.console-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.console-btn:focus-visible {
+  outline: 3px solid #f5c451;
+  outline-offset: 2px;
+}
+
+.console-btn-dpad {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3a3d42;
+  color: #d9dadc;
+  border: 2px solid #202225;
+  box-shadow: 0 3px 0 #1a1c1e;
+  font-size: clamp(0.6rem, 2.2vh, 1rem);
+}
+
+.console-btn-dpad:hover:not(:disabled) {
+  background: #45484d;
+}
+
+.console-btn-dpad.is-pressed {
+  background: #2e3135;
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.console-btn-round {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.7rem, 2.4vh, 1.1rem);
+  font-weight: 700;
+  color: #fff;
+  background: radial-gradient(circle at 35% 28%, #c39fe8 0%, #8a5cc4 55%, #6a3fa0 100%);
+  border: 2px solid #3c2260;
+  box-shadow: 0 4px 0 #3c2260;
+}
+
+.console-btn-round:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.console-btn-round.is-pressed {
+  transform: translateY(3px);
+  box-shadow: none;
+  filter: brightness(0.95);
+}
+
+.console-btn-pill {
+  min-width: clamp(52px, 13vw, 72px);
+  min-height: clamp(30px, 5.2dvh, 42px);
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: #4a4d52;
+  color: #d9dadc;
+  border: 2px solid #2c2e31;
+  box-shadow: 0 3px 0 #1a1c1e;
+  font-size: clamp(0.45rem, 1.4vh, 0.58rem);
+  letter-spacing: 0.05em;
+}
+
+.console-btn-pill:hover:not(:disabled) {
+  background: #55585d;
+}
+
+.console-btn-pill.is-pressed {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* --- Mobile portrait: la carcasa se ajusta al contenido y la pantalla
+   toma su altura del aspect-ratio, para no dejar carcasa vacía. ------- */
+
+@media (max-width: 560px) and (orientation: portrait) {
+  .console-body {
+    height: auto;
+    max-height: 96dvh;
+  }
+
+  /* Cuadrada en vertical: con 4/3 la pantalla quedaba muy baja y en
+     combate el arena se comía toda la altura disponible. */
+  .console-screen {
+    flex: 0 1 auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .console-controls {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    row-gap: 0.7rem;
+  }
+
+  .dpad {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .action-cluster {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .console-lower {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* --- Landscape bajo (móvil girado): D-pad y botones flanquean la
+   pantalla para no robarle altura. ----------------------------------- */
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .console-body {
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(0.4rem, 2vw, 1.2rem);
+    width: min(98vw, 980px);
+  }
+
+  .console-body::before {
+    display: none;
+  }
+
+  .console-screen {
+    order: 2;
+    flex: 1 1 auto;
+    height: 100%;
+    width: auto;
+  }
+
+  .console-controls {
+    display: contents;
+  }
+
+  .dpad {
+    order: 1;
+  }
+
+  .console-lower {
+    order: 3;
+    flex-direction: column;
+  }
+
+  .action-cluster {
+    order: 4;
+  }
+}

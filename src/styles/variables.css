@@ -33,9 +33,15 @@
   --world-bridge: #d8a856;
   --world-cave-entrance: #2a2622;
 
-  /* Press Start 2P para HUD/títulos/botones (cortos); VT323 para texto
-     largo (más legible a tamaños normales que un pixel-font de bloque). */
+  /* Tres roles tipográficos separados a propósito:
+     - display: Press Start 2P, solo para el logotipo del juego. Dibuja las
+       mayúsculas acentuadas a altura de minúscula (POKéMON, REGIóN) y
+       convierte ◀▶· en manchas, así que NO sirve para UI en español.
+     - ui: Pixelify Sans, pixel-art con Á/É/Í/Ó/Ú/Ñ/Ü/¿/¡ correctos y
+       legible en tamaños pequeños. Es la fuente de menús, HUD y Pokédex.
+     - body: VT323 para texto largo (diálogos, descripciones). */
   --font-display: 'Press Start 2P', 'Courier New', monospace;
+  --font-ui: 'Pixelify Sans', 'Courier New', monospace;
   --font-body: 'VT323', 'Courier New', monospace;
 
   --panel-radius: 0px;
