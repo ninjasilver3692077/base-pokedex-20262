@@ -97,6 +97,19 @@
   color: var(--color-text);
 }
 
+.pause-partner {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-ui);
+  font-size: clamp(0.45rem, 1.5vh, 0.6rem);
+  letter-spacing: 0.06em;
+  color: #8db4bd;
+}
+
+.pause-partner strong {
+  color: #f5c451;
+  font-weight: 400;
+}
+
 .overlay-title {
   font-family: var(--font-ui);
   font-weight: 700;

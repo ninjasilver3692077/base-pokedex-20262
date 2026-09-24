@@ -28,6 +28,12 @@ function main() {
   assert.equal(initial.playerHp, initial.playerMaxHp)
   assert.equal(initial.outcome, null)
 
+  // El compañero equipado suma su stat real (attack/15) al daño.
+  const strongPartner = { stats: [{ stat: { name: 'attack' }, base_stat: 150 }] }
+  const plain = withMockRandom([0, 0], () => resolveTurn(initial, 'attack', mockEnemy))
+  const boosted = withMockRandom([0, 0], () => resolveTurn(initial, 'attack', mockEnemy, undefined, strongPartner))
+  assert.equal(plain.enemyHp - boosted.enemyHp, 10, 'bono de ataque = floor(150/15)')
+
   // Run termina el combate sin tocar HP.
   const fled = resolveTurn(initial, 'run', mockEnemy)
   assert.equal(fled.outcome, 'fled')

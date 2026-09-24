@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { gameReducer, GAME_ACTIONS } from '../src/context/gameReducer.js'
-import { createInitialGameState } from '../src/utils/gameStorage.js'
+import { createInitialGameState, normalizeGameState } from '../src/utils/gameStorage.js'
 
 function main() {
   let state = createInitialGameState()
@@ -29,6 +29,36 @@ function main() {
 
   const resetState = gameReducer(state, { type: GAME_ACTIONS.RESET_GAME })
   assert.deepEqual(resetState, createInitialGameState())
+
+  // Compañero equipado: el starter nace descubierto, capturado y equipado.
+  let party = gameReducer(createInitialGameState(), { type: GAME_ACTIONS.SET_STARTER, id: 7 })
+  assert.equal(party.activePokemonId, 7)
+  assert.deepEqual(party.capturedPokemonIds, [7])
+  assert.deepEqual(party.discoveredPokemonIds, [7])
+
+  // Capturar no reemplaza al compañero.
+  party = gameReducer(party, { type: GAME_ACTIONS.CAPTURE_POKEMON, id: 25 })
+  assert.equal(party.activePokemonId, 7)
+
+  // Equipar un capturado cambia el compañero.
+  party = gameReducer(party, { type: GAME_ACTIONS.EQUIP_POKEMON, id: 25 })
+  assert.equal(party.activePokemonId, 25)
+
+  // Ni visto ni desconocido se pueden equipar.
+  party = gameReducer(party, { type: GAME_ACTIONS.DISCOVER_POKEMON, id: 16 })
+  assert.equal(gameReducer(party, { type: GAME_ACTIONS.EQUIP_POKEMON, id: 16 }), party)
+  assert.equal(gameReducer(party, { type: GAME_ACTIONS.EQUIP_POKEMON, id: 999 }), party)
+
+  // Save v2 sin activePokemonId: starter como fallback, versión subida.
+  const oldSave = { version: 2, starterPokemonId: 4, discoveredPokemonIds: [4, 1], capturedPokemonIds: [1, 4] }
+  const migrated = normalizeGameState(oldSave)
+  assert.equal(migrated.activePokemonId, 4)
+  assert.equal(migrated.version, createInitialGameState().version)
+  // Starter inválido: primer capturado. Nada capturado: null.
+  assert.equal(normalizeGameState({ ...oldSave, starterPokemonId: 99 }).activePokemonId, 1)
+  assert.equal(normalizeGameState({ ...oldSave, capturedPokemonIds: [] }).activePokemonId, null)
+  // Un activo guardado que ya no está capturado no se respeta.
+  assert.equal(normalizeGameState({ ...oldSave, version: 3, activePokemonId: 150 }).activePokemonId, 4)
 
   // Fase 11D: mundo/jugador.
   let world = createInitialGameState()
@@ -62,7 +92,7 @@ function main() {
   const freshExit = gameReducer(createInitialGameState(), { type: GAME_ACTIONS.EXIT_BATTLE })
   assert.equal(freshExit.mode, 'world')
 
-  console.log('OK: gameReducer (descubrir, capturar, seleccionar, starter, reset, mundo/jugador) verificado.')
+  console.log('OK: gameReducer (descubrir, capturar, seleccionar, starter, equipar, migración, reset, mundo/jugador) verificado.')
 }
 
 main()

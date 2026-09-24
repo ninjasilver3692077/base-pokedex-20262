@@ -519,6 +519,36 @@ input:focus-visible {
 .status-undiscovered { color: #e3b95d; }
 .status-discovered { color: #69c4d0; }
 .status-captured { color: #69d58b; }
+/* Compañero equipado: dorado, el mismo color de "seleccionado" del resto
+   de la consola, para que se distinga de un simple CAPTURADO. */
+.status-active { color: #f5c451; }
+/* Sin borde propio: el borde amarillo ya es el cursor de foco. */
+.pokedex-card.is-active {
+  position: relative;
+}
+.pokedex-card.is-active::before {
+  content: '★';
+  position: absolute;
+  top: 0.2rem;
+  left: 0.3rem;
+  font-size: clamp(0.6rem, 1.8vh, 0.85rem);
+  color: #f5c451;
+  text-shadow: 1px 1px #000;
+}
+.pokedex-card.is-active .pokedex-card-meta {
+  color: #f5c451;
+}
+/* Aviso corto de "POKÉMON EQUIPPED!": parpadeo en pasos, estilo RPG. */
+.equip-toast {
+  font-family: var(--font-ui);
+  font-size: clamp(0.45rem, 1.5vh, 0.6rem);
+  color: #f5c451;
+  white-space: nowrap;
+  animation: equip-blink 0.35s steps(2, end) 3;
+}
+@keyframes equip-blink {
+  50% { opacity: 0; }
+}
 /* Ficha de Pokémon: dos columnas para llenar el ancho de la pantalla. */
 .detail-shell {
   display: flex;
@@ -531,6 +561,7 @@ input:focus-visible {
 .detail-head {
   flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.6rem;
@@ -538,7 +569,7 @@ input:focus-visible {
   border-bottom: 2px solid #2f4a5c;
 }
 .detail-head h1 {
-  margin: 0;
+  margin: 0 auto 0 0;
   font-size: clamp(0.6rem, 2vh, 0.88rem);
   text-transform: capitalize;
 }

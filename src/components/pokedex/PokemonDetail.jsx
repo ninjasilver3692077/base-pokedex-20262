@@ -3,6 +3,7 @@ import { useGame } from '../../context/GameContext.jsx'
 import { useConsoleActions } from '../../input/InputProvider.jsx'
 import { INPUT_ACTIONS } from '../../input/inputActions.js'
 import { capitalize } from '../../utils/text.js'
+import { useEquip } from '../../hooks/useEquip.js'
 
 const STAT_LABELS = {
   hp: 'HP',
@@ -21,11 +22,16 @@ function PokemonDetail({ id, onBack, onPrev, onNext, onClose }) {
   const isCaptured = state.capturedPokemonIds.includes(id)
   const isDiscovered = isCaptured || state.discoveredPokemonIds.includes(id)
   const { status, pokemon, error } = usePokemon(id)
+  const { activeId, canEquip, equip, justEquipped } = useEquip()
+  const isActive = id === activeId
+  const equippable = canEquip(id)
 
   useConsoleActions(
     {
       [INPUT_ACTIONS.ACTION_2]: onBack,
-      [INPUT_ACTIONS.ACTION_3]: onPrev,
+      // 3 es EQUIP (solo si está capturado y no equipado); anterior y
+      // siguiente siguen en el D-pad, y 4 conserva "siguiente".
+      [INPUT_ACTIONS.ACTION_3]: () => equip(id),
       [INPUT_ACTIONS.ACTION_4]: onNext,
       [INPUT_ACTIONS.MOVE_LEFT]: onPrev,
       [INPUT_ACTIONS.MOVE_RIGHT]: onNext,
@@ -39,6 +45,7 @@ function PokemonDetail({ id, onBack, onPrev, onNext, onClose }) {
       hints: [
         { keys: 'LR', label: 'ANTERIOR/SIGUIENTE' },
         { keys: '2', label: 'VOLVER' },
+        ...(equippable ? [{ keys: '3', label: 'EQUIP' }] : []),
         { keys: 'TAB', label: 'CERRAR' },
       ],
     },
@@ -80,6 +87,12 @@ function PokemonDetail({ id, onBack, onPrev, onNext, onClose }) {
           #{String(pokemon.id).padStart(3, '0')} {capitalize(pokemon.name)}
         </h1>
         <span className={`detail-status status-${statusKey}`}>{statusLabel}</span>
+        {isActive && <span className="detail-status status-active">★ ACTIVE PARTNER</span>}
+        {justEquipped && (
+          <span className="equip-toast" role="status">
+            POKÉMON EQUIPPED!
+          </span>
+        )}
       </header>
 
       <div className="detail-body">

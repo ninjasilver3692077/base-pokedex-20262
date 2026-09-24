@@ -37,8 +37,15 @@ export function createBattleState(enemyPokemon) {
   }
 }
 
-function playerAttack(state) {
-  const damage = randomInt(PLAYER_ATTACK_MIN, PLAYER_ATTACK_MAX)
+// Mismo bono que el contraataque rival (stat/15): el compañero equipado
+// pega según sus stats reales de PokéAPI sin cambiar las reglas del
+// minijuego. Sin Pokémon del jugador (tests antiguos) el bono es 0.
+function statBonus(pokemon, statName) {
+  return pokemon ? Math.floor(getBaseStat(pokemon, statName, 0) / 15) : 0
+}
+
+function playerAttack(state, playerPokemon) {
+  const damage = randomInt(PLAYER_ATTACK_MIN, PLAYER_ATTACK_MAX) + statBonus(playerPokemon, 'attack')
   return {
     ...state,
     enemyHp: Math.max(0, state.enemyHp - damage),
@@ -46,8 +53,8 @@ function playerAttack(state) {
   }
 }
 
-function playerSpecial(state) {
-  const damage = randomInt(PLAYER_SPECIAL_MIN, PLAYER_SPECIAL_MAX)
+function playerSpecial(state, playerPokemon) {
+  const damage = randomInt(PLAYER_SPECIAL_MIN, PLAYER_SPECIAL_MAX) + statBonus(playerPokemon, 'special-attack')
   return {
     ...state,
     enemyHp: Math.max(0, state.enemyHp - damage),
@@ -75,7 +82,7 @@ function throwPokeball(state, captureRate) {
   return { ...state, log: [...state.log, 'La Pokéball no logró capturar al Pokémon salvaje.'] }
 }
 
-export function resolveTurn(state, action, enemyPokemon, captureRate) {
+export function resolveTurn(state, action, enemyPokemon, captureRate, playerPokemon = null) {
   if (state.outcome) return state
 
   if (action === 'run') {
@@ -83,8 +90,8 @@ export function resolveTurn(state, action, enemyPokemon, captureRate) {
   }
 
   let next = state
-  if (action === 'attack') next = playerAttack(next)
-  else if (action === 'special') next = playerSpecial(next)
+  if (action === 'attack') next = playerAttack(next, playerPokemon)
+  else if (action === 'special') next = playerSpecial(next, playerPokemon)
   else if (action === 'pokeball') next = throwPokeball(next, captureRate)
 
   if (next.outcome === 'captured') {

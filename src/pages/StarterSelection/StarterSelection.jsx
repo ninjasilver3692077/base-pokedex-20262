@@ -39,8 +39,6 @@ function StarterSelection() {
   function chooseStarter(index) {
     const id = STARTERS[index]
     dispatch({ type: GAME_ACTIONS.SET_STARTER, id })
-    dispatch({ type: GAME_ACTIONS.DISCOVER_POKEMON, id })
-    dispatch({ type: GAME_ACTIONS.CAPTURE_POKEMON, id })
     navigate('/map')
   }
 

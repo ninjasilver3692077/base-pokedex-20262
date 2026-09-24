@@ -7,6 +7,7 @@ export const GAME_ACTIONS = {
   CAPTURE_POKEMON: 'CAPTURE_POKEMON',
   SELECT_POKEMON: 'SELECT_POKEMON',
   SET_STARTER: 'SET_STARTER',
+  EQUIP_POKEMON: 'EQUIP_POKEMON',
   RESET_GAME: 'RESET_GAME',
   ENTER_REGION: 'ENTER_REGION',
   MOVE_PLAYER: 'MOVE_PLAYER',
@@ -35,8 +36,20 @@ export function gameReducer(state, action) {
     case GAME_ACTIONS.SELECT_POKEMON:
       return { ...state, selectedPokemonId: action.id }
 
+    // El starter nace descubierto, capturado y equipado en un solo paso.
     case GAME_ACTIONS.SET_STARTER:
-      return { ...state, starterPokemonId: action.id }
+      return {
+        ...state,
+        starterPokemonId: action.id,
+        activePokemonId: action.id,
+        discoveredPokemonIds: addUnique(state.discoveredPokemonIds, action.id),
+        capturedPokemonIds: addUnique(state.capturedPokemonIds, action.id),
+      }
+
+    // Solo se puede equipar lo capturado; cualquier otro id se ignora.
+    case GAME_ACTIONS.EQUIP_POKEMON:
+      if (!state.capturedPokemonIds.includes(action.id)) return state
+      return { ...state, activePokemonId: action.id }
 
     case GAME_ACTIONS.RESET_GAME:
       return createInitialGameState()

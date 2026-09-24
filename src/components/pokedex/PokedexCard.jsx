@@ -12,12 +12,15 @@ const STATUS_LABELS = {
 // Presentacional puro: quien lo use decide cómo se selecciona (la Pokédex
 // lo envuelve en un <button> propio, ver Pokedex.jsx) en vez de navegar a
 // una ruta — la Pokédex es un overlay, no una página.
-function PokedexCard({ entry }) {
+function PokedexCard({ entry, isActive = false }) {
   const { status, pokemon } = usePokemon(entry.id)
   const sprite = pokemon?.sprites?.front_default
 
   return (
-    <div className={`pokedex-card ${entry.status}`} aria-label={`${capitalize(entry.name)}, número ${entry.id}, ${STATUS_LABELS[entry.status]}`}>
+    <div
+      className={`pokedex-card ${entry.status}${isActive ? ' is-active' : ''}`}
+      aria-label={`${capitalize(entry.name)}, número ${entry.id}, ${isActive ? 'compañero equipado' : STATUS_LABELS[entry.status]}`}
+    >
       <div className="pokedex-card-sprite">
         {status === 'ready' && sprite ? (
           <img src={sprite} alt={entry.name} loading="lazy" />
@@ -27,7 +30,7 @@ function PokedexCard({ entry }) {
       </div>
       <span className="pokedex-card-name">{capitalize(entry.name)}</span>
       <span className="pokedex-card-meta">
-        #{String(entry.id).padStart(3, '0')} · {STATUS_LABELS[entry.status]}
+        #{String(entry.id).padStart(3, '0')} · {isActive ? '★ EQUIPPED' : STATUS_LABELS[entry.status]}
       </span>
     </div>
   )

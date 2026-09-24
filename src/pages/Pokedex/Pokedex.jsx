@@ -5,6 +5,7 @@ import PokemonDetail from '../../components/pokedex/PokemonDetail.jsx'
 import { playSound } from '../../audio/sounds.js'
 import { useConsoleActions } from '../../input/InputProvider.jsx'
 import { INPUT_ACTIONS } from '../../input/inputActions.js'
+import { useEquip } from '../../hooks/useEquip.js'
 
 // Página fija: la rejilla entra entera en la pantalla de la consola, así
 // que la Pokédex se navega paginando (D-pad) en vez de haciendo scroll.
@@ -50,6 +51,7 @@ function Pokedex({ initialFocusId, onClose }) {
   const [searchActive, setSearchActive] = useState(false)
   const searchInputRef = useRef(null)
   const gridRef = useRef(null)
+  const { activeId, canEquip, equip, justEquipped } = useEquip()
 
   const statusFilter = STATUS_FILTERS[statusFilterIndex]
 
@@ -129,6 +131,10 @@ function Pokedex({ initialFocusId, onClose }) {
   }, [])
 
   const inDetail = detailId != null
+  const focusedEntry = pageEntries[focusIndex]
+  // Botón 3 es EQUIP cuando la tarjeta enfocada está capturada y no es ya
+  // el compañero; en cualquier otra tarjeta sigue ciclando el filtro.
+  const focusedEquippable = focusedEntry != null && canEquip(focusedEntry.id)
 
   const gridHandlers = {
     [INPUT_ACTIONS.MOVE_LEFT]: () => moveFocus(-1),
@@ -140,7 +146,10 @@ function Pokedex({ initialFocusId, onClose }) {
       if (entry) openDetail(entry.id)
     },
     [INPUT_ACTIONS.ACTION_2]: onClose,
-    [INPUT_ACTIONS.ACTION_3]: () => setStatusFilterIndex((i) => (i + 1) % STATUS_FILTERS.length),
+    [INPUT_ACTIONS.ACTION_3]: () => {
+      if (focusedEquippable) equip(focusedEntry.id)
+      else setStatusFilterIndex((i) => (i + 1) % STATUS_FILTERS.length)
+    },
     [INPUT_ACTIONS.ACTION_4]: activateSearch,
     [INPUT_ACTIONS.OPEN_POKEDEX]: onClose,
     [INPUT_ACTIONS.TOGGLE_PAUSE]: onClose,
@@ -158,7 +167,7 @@ function Pokedex({ initialFocusId, onClose }) {
           { keys: 'DPAD', label: 'NAVEGAR' },
           { keys: '1', label: 'ABRIR' },
           { keys: '2', label: 'CERRAR' },
-          { keys: '3', label: STATUS_LABELS[statusFilter] },
+          { keys: '3', label: focusedEquippable ? 'EQUIP' : STATUS_LABELS[statusFilter] },
           { keys: '4', label: 'BUSCAR' },
         ],
   })
@@ -202,7 +211,7 @@ function Pokedex({ initialFocusId, onClose }) {
     <div className="pokedex-shell">
       <header className="pokedex-header">
         <div className="pokedex-titles">
-          <h1>Pokédex</h1>
+          <h1>Pokédex{justEquipped && <span className="equip-toast"> POKÉMON EQUIPPED!</span>}</h1>
           <p className="pokedex-progress">
             {capturedCount} capturados · {discoveredCount} vistos · {entries.length} especies
           </p>
@@ -283,7 +292,7 @@ function Pokedex({ initialFocusId, onClose }) {
                 openDetail(entry.id)
               }}
             >
-              <PokedexCard entry={entry} />
+              <PokedexCard entry={entry} isActive={entry.id === activeId} />
             </button>
           ))}
         </div>

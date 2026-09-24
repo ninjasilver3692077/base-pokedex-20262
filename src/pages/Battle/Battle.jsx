@@ -11,6 +11,7 @@ import { playSound } from '../../audio/sounds.js'
 import { useConsoleActions } from '../../input/InputProvider.jsx'
 import { INPUT_ACTIONS } from '../../input/inputActions.js'
 import { useUiState } from '../../context/UiStateContext.jsx'
+import { useEquip } from '../../hooks/useEquip.js'
 
 const OUTCOME_MESSAGES = {
   enemyFainted: 'El Pokémon salvaje se debilitó por completo y ya no se puede capturar.',
@@ -59,7 +60,13 @@ function Battle() {
   const enemyId = gameState.selectedPokemonId
   const { status, pokemon: enemyPokemon, error } = usePokemon(enemyId)
   const { status: speciesStatus, species } = useSpecies(enemyId)
-  const { pokemon: starter } = usePokemon(gameState.starterPokemonId)
+  // El jugador pelea con su compañero equipado (activePokemonId), cargado
+  // por la misma capa cacheada de PokéAPI que el rival. Se fija al entrar:
+  // equipar durante el combate (Pokédex o tras capturar) vale para el
+  // siguiente, nunca cambia de Pokémon a mitad de pelea.
+  const [partnerId] = useState(gameState.activePokemonId)
+  const { status: partnerStatus, pokemon: partner } = usePokemon(partnerId)
+  const { canEquip, equip, justEquipped } = useEquip()
 
   const [battle, setBattle] = useState(null)
   // effects.tick fuerza el remount de los elementos animados de cada turno
@@ -95,7 +102,7 @@ function Battle() {
       if (!battle || battle.outcome) return
       if (action === 'pokeball' && speciesStatus !== 'ready') return
 
-      const next = resolveTurn(battle, action, enemyPokemon, species?.capture_rate)
+      const next = resolveTurn(battle, action, enemyPokemon, species?.capture_rate, partner)
 
       let enemyClass = ''
       if (next.outcome === 'captured') enemyClass = 'capture-success'
@@ -111,16 +118,20 @@ function Battle() {
       setEffects((prev) => ({ tick: prev.tick + 1, enemyClass, playerClass }))
       setBattle(next)
     },
-    [battle, speciesStatus, enemyPokemon, species],
+    [battle, speciesStatus, enemyPokemon, species, partner],
   )
 
   const finished = Boolean(battle?.outcome)
+  // Tras capturar se ofrece equiparlo, nunca se equipa solo: 1 sigue con
+  // el compañero actual, 3 cambia al recién capturado.
+  const offerEquip = battle?.outcome === 'captured' && canEquip(enemyId)
 
   useConsoleActions(
     finished
       ? {
           [INPUT_ACTIONS.ACTION_1]: returnToWorld,
           [INPUT_ACTIONS.ACTION_2]: () => setPokedexOpen(true),
+          [INPUT_ACTIONS.ACTION_3]: () => equip(enemyId),
         }
       : {
           [INPUT_ACTIONS.ACTION_1]: () => handleAction('attack'),
@@ -134,8 +145,9 @@ function Battle() {
       context: 'BATTLE',
       hints: finished
         ? [
-            { keys: '1', label: 'VOLVER AL MUNDO' },
+            { keys: '1', label: battle.outcome === 'captured' ? 'CONTINUAR' : 'VOLVER AL MUNDO' },
             { keys: '2', label: 'POKÉDEX' },
+            ...(offerEquip ? [{ keys: '3', label: 'EQUIP' }] : []),
           ]
         : [
             { keys: '1', label: 'ATACAR' },
@@ -170,7 +182,7 @@ function Battle() {
     )
   }
 
-  if (status === 'loading' || !battle) {
+  if (status === 'loading' || !battle || (partnerId != null && partnerStatus === 'loading')) {
     return (
       <section className="screen">
         <h1>Cargando combate...</h1>
@@ -180,8 +192,8 @@ function Battle() {
   }
 
   const sprite = enemyPokemon.sprites?.front_default
-  const playerSprite = starter?.sprites?.back_default ?? starter?.sprites?.front_default
-  const playerName = starter ? capitalize(starter.name) : 'Tu equipo'
+  const playerSprite = partner?.sprites?.back_default ?? partner?.sprites?.front_default
+  const playerName = partner ? capitalize(partner.name) : 'Tu equipo'
   const lastMessage = battle.log[battle.log.length - 1]
   const message = battle.outcome
     ? `${OUTCOME_MESSAGES[battle.outcome] ?? ''}`
@@ -221,7 +233,11 @@ function Battle() {
       <div className="battle-console">
         <div className="dialogue-box" role="status" aria-live="polite">
           <p>{message}</p>
-          {battle.outcome === 'captured' && <p className="dialogue-highlight">¡Atrapaste a {capitalize(enemyPokemon.name)}!</p>}
+          {battle.outcome === 'captured' && (
+            <p className="dialogue-highlight">
+              {justEquipped ? 'POKÉMON EQUIPPED!' : `¡Atrapaste a ${capitalize(enemyPokemon.name)}!`}
+            </p>
+          )}
         </div>
 
       </div>

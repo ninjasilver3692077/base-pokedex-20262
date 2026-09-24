@@ -133,7 +133,7 @@ function WorldMap() {
   useConsoleActions(
     {
       [INPUT_ACTIONS.ACTION_1]: () => {
-        if (state.starterPokemonId != null) openPokedexAt(state.starterPokemonId)
+        if (state.activePokemonId != null) openPokedexAt(state.activePokemonId)
       },
     },
     {

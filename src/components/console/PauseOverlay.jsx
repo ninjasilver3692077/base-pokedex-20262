@@ -6,6 +6,8 @@ import { useUiState } from '../../context/UiStateContext.jsx'
 import { useConsoleActions } from '../../input/InputProvider.jsx'
 import { INPUT_ACTIONS } from '../../input/inputActions.js'
 import { isMuted, toggleMute } from '../../audio/sounds.js'
+import { usePokemon } from '../../hooks/usePokemon.js'
+import { capitalize } from '../../utils/text.js'
 
 const MENU_ITEMS = [
   { id: 'continue', label: 'CONTINUE' },
@@ -25,6 +27,8 @@ function PauseOverlay() {
   const [view, setView] = useState('menu')
   const [selected, setSelected] = useState(0)
   const [muted, setMuted] = useState(isMuted)
+  // Solo informativo: el compañero se cambia desde la Pokédex.
+  const { pokemon: partner } = usePokemon(state.activePokemonId)
 
   function closePause() {
     setPaused(false)
@@ -83,6 +87,11 @@ function PauseOverlay() {
       {view === 'menu' ? (
         <>
           <p className="overlay-title">PAUSED</p>
+          {partner && (
+            <p className="pause-partner">
+              PARTNER <strong>{capitalize(partner.name)}</strong>
+            </p>
+          )}
           <ul className="overlay-menu">
             {MENU_ITEMS.map((item, index) => (
               <li key={item.id}>
