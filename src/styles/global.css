@@ -411,6 +411,13 @@ input:focus-visible {
   grid-auto-rows: 1fr;
   gap: clamp(0.25rem, 1vw, 0.6rem);
 }
+/* Pantalla angosta (móvil): 3×4 en vez de 4×3; useGridColumns lee las
+   columnas reales, así que el D-pad sigue navegando bien. */
+@container screen (max-width: 340px) {
+  .pokedex-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 .pokedex-card-btn {
   display: block;
   min-width: 0;
